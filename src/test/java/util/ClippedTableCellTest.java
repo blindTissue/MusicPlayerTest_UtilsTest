@@ -8,6 +8,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Simple test class for ClippedTableCell.
+ * Tested constructor and null edge cases
+ */
 class ClippedTableCellTest {
 
     private static class TestableClippedTableCell<S, T> extends ClippedTableCell<S, T> {

@@ -51,8 +51,6 @@ class SubViewTest {
 
     @BeforeEach
     void setUp() {
-        // Create a song with the correct constructor parameters
-        // Parameters: id, title, artist, album, duration, trackNumber, discNumber, year, dateAdded, genre
         mockSong = new Song(1, "Test Song", "Test Artist", "Test Album", 
                             Duration.ofSeconds(180), 1, 1, 2020, 
                             LocalDateTime.now(), "Test Genre");

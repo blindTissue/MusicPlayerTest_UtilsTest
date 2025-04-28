@@ -21,6 +21,12 @@ import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
 import javafx.beans.property.SimpleObjectProperty;
+
+/**
+ * Made to test the Search class.
+ * The class mostly have nested comparator conditions.
+ * Tried to create cases that satisfy the conditions.
+ */
 class SearchTest{
 
     @BeforeAll
@@ -28,21 +34,6 @@ class SearchTest{
         // Initialize JavaFX runtime
         JavaFXInitializer.initialize();
     }
-
-//    @BeforeEach
-//    void setUp() throws Exception {
-//        // Set the path for the test library XML file
-//        Resources.JAR = new File("src/test/resources").getAbsolutePath() + File.separator;
-//
-//        // Create test data on JavaFX thread
-//        JavaFXInitializer.runLater(() -> {
-//            try {
-//                initializeTestData();
-//            } catch (Exception e) {
-//                throw new RuntimeException("Failed to initialize test data", e);
-//            }
-//        });
-//    }
 
 
     private void setLibraryField(String fieldName, Object value) throws Exception {

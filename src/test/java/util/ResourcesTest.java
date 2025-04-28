@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/**
+ * Simple test class for Resources.
+ * Since Resources is a utility class with static, there is not much tetesting to do.
+ */
 class ResourcesTest {
 
 

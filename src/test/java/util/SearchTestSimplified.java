@@ -20,7 +20,11 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
-import javafx.beans.property.SimpleObjectProperty;
+
+/**
+ * Simplpified version of the SearchTest class.
+ * Currently modified to be pretty much the same as the original.
+ */
 class SearchTestSimplified {
 
     @BeforeAll
@@ -29,20 +33,7 @@ class SearchTestSimplified {
         JavaFXInitializer.initialize();
     }
 
-//    @BeforeEach
-//    void setUp() throws Exception {
-//        // Set the path for the test library XML file
-//        Resources.JAR = new File("src/test/resources").getAbsolutePath() + File.separator;
-//
-//        // Create test data on JavaFX thread
-//        JavaFXInitializer.runLater(() -> {
-//            try {
-//                initializeTestData();
-//            } catch (Exception e) {
-//                throw new RuntimeException("Failed to initialize test data", e);
-//            }
-//        });
-//    }
+
 
 
     private void setLibraryField(String fieldName, Object value) throws Exception {

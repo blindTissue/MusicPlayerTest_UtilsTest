@@ -22,6 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
 /**\
  * Test class for CustomSliderSkin.
  * All tests should be self-explanatory with some unclear ones having comments.
+ * Tests were created iteratively, Due to number of branches with multiple conditions,
+ * Earlier tests were made to cover many branches at once.
+ * Later tests are often made to test specific edge cases.
  * .layout() is called to apply to the pane.
  */
 class CustomSliderSkinTest {
