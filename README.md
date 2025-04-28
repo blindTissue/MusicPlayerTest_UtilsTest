@@ -16,4 +16,8 @@ Screenshot of the test report was also added to coco_report for your convenience
 
 There are tests that check multiple threads. There are tests with set time to make sure that threads collide. The time would need some modification in different hardware.
 ControlPanelTableCell was not tested as it should be tested in the view project. The test is not included in this project.
+As XMLEditorTest is a test for static methods, when the tests are all run, the method creates an error. 
+In order to avoid errors, test runs should be run separately.
+For the Jacoco report, all tests were run together.
+
 Please check the slideshow for more information about the test.

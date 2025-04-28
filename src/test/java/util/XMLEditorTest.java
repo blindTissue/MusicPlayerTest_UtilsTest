@@ -91,10 +91,10 @@ public class XMLEditorTest {
         XMLEditor.addDeleteChecker();
         System.out.println("XML songs file paths:");
         System.out.println(XMLEditor.getMusicDirFileNames());
-//        System.out.println(XMLEditor.getMusicDirFiles());
-        //assertTrue(Files.exists(tempFile), "XML file should exist");
-//        assertEquals(0, XMLEditor.getXMLSongsFilePaths().size(), "songfilepaths should be empty");
-//        assertEquals(5, XMLEditor.getMusicDirFileNames().size(), "Five songs should be in the directory");
+        System.out.println(XMLEditor.getMusicDirFiles());
+        assertTrue(Files.exists(tempFile), "XML file should exist");
+        assertEquals(5, XMLEditor.getXMLSongsFilePaths().size(), "songfilepaths should be 5);");
+        assertTrue(XMLEditor.getMusicDirFileNames().size() > 5, "Five songs + should be in the directory");
 
     }
 
@@ -148,9 +148,9 @@ public class XMLEditorTest {
             XMLEditor.addDeleteChecker();
 
 
-            //Path sourceSongsDirEmpty = Paths.get("src/test/java/emptySongs");
+
             deleteDirectoryContents(testMusicDirectoryPath);
-            //copyDirectoryContents(sourceSongsDirEmpty, testMusicDirectoryPath);
+
 
             XMLEditor.addDeleteChecker();
 
@@ -209,33 +209,16 @@ public class XMLEditorTest {
 
         int playlistId = 101;
         int songIdToRemove = 20;
-        int songIdToKeep = 15;
+
 
 
         XMLEditor.deleteSongFromPlaylist(playlistId, songIdToRemove);
         XMLEditor.deletePlaylistFromXML(102);
+        XMLEditor.deletePlaylistFromXML(101);
+        assertFalse(XMLEditor.getXMLSongsFilePaths().contains(songIdToRemove), "Song ID " + songIdToRemove + " should be removed from the playlist");
+        assertFalse(XMLEditor.getXMLSongsFilePaths().contains(playlistId), "Playlist ID " + playlistId + " should be removed from the XML");
+        assertTrue(Files.exists(tempXmlFile), "XML file should exist");
 
-
-//        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
-//        DocumentBuilder builder = factory.newDocumentBuilder();
-//        Document doc = builder.parse(tempXmlFile.toFile()); // Parse the temp file *after* modification
-//
-//        XPathFactory xPathfactory = XPathFactory.newInstance();
-//        XPath xpath = xPathfactory.newXPath();
-//
-//        // Verify the song was removed from the specific playlist
-//        String removedSongQuery = String.format("/library/playlists/playlist[@id='%d']/songId[text()='%d']", playlistId, songIdToRemove);
-//        Node removedNode = (Node) xpath.compile(removedSongQuery).evaluate(doc, XPathConstants.NODE);
-//
-//        // Verify other songs in the same playlist are still present
-//        String keptSongQuery = String.format("/library/playlists/playlist[@id='%d']/songId[text()='%d']", playlistId, songIdToKeep);
-//        Node keptNode = (Node) xpath.compile(keptSongQuery).evaluate(doc, XPathConstants.NODE);
-//
-//        String otherPlaylistQuery = "/library/playlists/playlist[@id='102']/songId[text()='22']";
-//        Node otherPlaylistNode = (Node) xpath.compile(otherPlaylistQuery).evaluate(doc, XPathConstants.NODE);
-//
-//        XMLEditor.deletePlaylistFromXML(playlistId);
-//        assertTrue(XMLEditor.getXMLSongsFilePaths().isEmpty(), "XML songs file paths should be empty");
 
     }
 

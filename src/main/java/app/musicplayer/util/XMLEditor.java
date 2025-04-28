@@ -314,12 +314,12 @@ public class XMLEditor {
 			File xmlFile = new File(musicPath);
 			StreamResult result = new StreamResult(xmlFile);
 			transformer.transform(source, result);
-//
-			TransformerFactory tf = TransformerFactory.newInstance();
-			Transformer consoleTransformer = tf.newTransformer();
-			consoleTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
-			consoleTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
-			consoleTransformer.transform(new DOMSource(doc), new StreamResult(System.out));
+////
+//			TransformerFactory tf = TransformerFactory.newInstance();
+//			Transformer consoleTransformer = tf.newTransformer();
+//			consoleTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", "4");
+//			consoleTransformer.setOutputProperty(OutputKeys.INDENT, "yes");
+//			consoleTransformer.transform(new DOMSource(doc), new StreamResult(System.out));
 
 		} catch (Exception ex) {
 			ex.printStackTrace();

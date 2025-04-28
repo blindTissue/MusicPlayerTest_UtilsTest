@@ -314,12 +314,12 @@ import app.musicplayer.model.Song;
 <span class="fc" id="L314">			File xmlFile = new File(musicPath);</span>
 <span class="fc" id="L315">			StreamResult result = new StreamResult(xmlFile);</span>
 <span class="fc" id="L316">			transformer.transform(source, result);</span>
-//
-<span class="fc" id="L318">			TransformerFactory tf = TransformerFactory.newInstance();</span>
-<span class="fc" id="L319">			Transformer consoleTransformer = tf.newTransformer();</span>
-<span class="fc" id="L320">			consoleTransformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);</span>
-<span class="fc" id="L321">			consoleTransformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
-<span class="fc" id="L322">			consoleTransformer.transform(new DOMSource(doc), new StreamResult(System.out));</span>
+////
+//			TransformerFactory tf = TransformerFactory.newInstance();
+//			Transformer consoleTransformer = tf.newTransformer();
+//			consoleTransformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);
+//			consoleTransformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);
+//			consoleTransformer.transform(new DOMSource(doc), new StreamResult(System.out));
 
 <span class="nc" id="L324">		} catch (Exception ex) {</span>
 <span class="nc" id="L325">			ex.printStackTrace();</span>
