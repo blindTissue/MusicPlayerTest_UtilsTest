@@ -1,0 +1,191 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ArtistsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">ArtistsController.java</span></div><h1>ArtistsController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import java.net.URL;
+import java.util.Collections;
+import java.util.ResourceBundle;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.model.Artist;
+import app.musicplayer.model.Library;
+import app.musicplayer.model.Song;
+import app.musicplayer.util.SubView;
+import javafx.animation.Animation;
+import javafx.animation.Transition;
+import javafx.application.Platform;
+import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+
+<span class="nc" id="L33">public class ArtistsController implements Initializable, SubView {</span>
+
+    @FXML private FlowPane grid;
+    
+    @Override
+    public void initialize(URL location, ResourceBundle resources) {
+
+<span class="nc" id="L40">        ObservableList&lt;Artist&gt; artists = Library.getArtists();</span>
+<span class="nc" id="L41">        Collections.sort(artists);</span>
+
+<span class="nc bnc" id="L43" title="All 2 branches missed.">        int limit = (artists.size() &lt; 25) ? artists.size() : 25;</span>
+
+<span class="nc bnc" id="L45" title="All 2 branches missed.">        for (int i = 0; i &lt; limit; i++) {</span>
+
+<span class="nc" id="L47">            Artist artist = artists.get(i);</span>
+<span class="nc" id="L48">            grid.getChildren().add(createCell(artist));</span>
+        }
+
+<span class="nc bnc" id="L51" title="All 2 branches missed.">        int rows = (artists.size() % 5 == 0) ? artists.size() / 5 : artists.size() / 5 + 1;</span>
+<span class="nc" id="L52">        grid.prefHeightProperty().bind(grid.widthProperty().divide(5).add(16).multiply(rows));</span>
+
+<span class="nc" id="L54">        new Thread(() -&gt; {</span>
+
+        	try {
+<span class="nc" id="L57">        		Thread.sleep(1000);</span>
+<span class="nc" id="L58">        	} catch (Exception ex) {</span>
+<span class="nc" id="L59">        		ex.printStackTrace();</span>
+<span class="nc" id="L60">        	}</span>
+        	
+<span class="nc bnc" id="L62" title="All 2 branches missed.">            for (int j = 25; j &lt; artists.size(); j++) {</span>
+<span class="nc" id="L63">                Artist artist = artists.get(j);</span>
+<span class="nc" id="L64">                Platform.runLater(() -&gt; grid.getChildren().add(createCell(artist)));</span>
+            }
+
+<span class="nc" id="L67">        }).start();</span>
+<span class="nc" id="L68">    }</span>
+    
+    private VBox createCell(Artist artist) {
+
+<span class="nc" id="L72">        VBox cell = new VBox();</span>
+<span class="nc" id="L73">        Label title = new Label(artist.getTitle());</span>
+<span class="nc" id="L74">        ImageView image = new ImageView(artist.getArtistImage());</span>
+<span class="nc" id="L75">        image.imageProperty().bind(artist.artistImageProperty());</span>
+<span class="nc" id="L76">        VBox imageBox = new VBox();</span>
+
+<span class="nc" id="L78">        title.setTextOverrun(OverrunStyle.CLIP);</span>
+<span class="nc" id="L79">        title.setWrapText(true);</span>
+<span class="nc" id="L80">        title.setPadding(new Insets(10, 0, 10, 0));</span>
+<span class="nc" id="L81">        title.setAlignment(Pos.TOP_LEFT);</span>
+<span class="nc" id="L82">        title.setPrefHeight(66);</span>
+<span class="nc" id="L83">        title.prefWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+
+<span class="nc" id="L85">        image.fitWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L86">        image.fitHeightProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L87">        image.setPreserveRatio(true);</span>
+<span class="nc" id="L88">        image.setSmooth(true);</span>
+
+<span class="nc" id="L90">        imageBox.prefWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L91">        imageBox.prefHeightProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L92">        imageBox.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L93">        imageBox.getChildren().add(image);</span>
+
+<span class="nc" id="L95">        cell.getChildren().addAll(imageBox, title);</span>
+<span class="nc" id="L96">        cell.setPadding(new Insets(10, 10, 0, 10));</span>
+<span class="nc" id="L97">        cell.getStyleClass().add(&quot;artist-cell&quot;);</span>
+<span class="nc" id="L98">        cell.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L99">        cell.setOnMouseClicked(event -&gt; {</span>
+
+<span class="nc" id="L101">            MainController mainController = MusicPlayer.getMainController();</span>
+<span class="nc" id="L102">            ArtistsMainController artistsMainController = (ArtistsMainController) mainController.loadView(&quot;ArtistsMain&quot;);</span>
+
+<span class="nc" id="L104">            VBox artistCell = (VBox) event.getSource();</span>
+<span class="nc" id="L105">            String artistTitle = ((Label) artistCell.getChildren().get(1)).getText();</span>
+<span class="nc" id="L106">            Artist a = Library.getArtist(artistTitle);</span>
+<span class="nc" id="L107">            artistsMainController.selectArtist(a);</span>
+<span class="nc" id="L108">        });</span>
+        
+<span class="nc" id="L110">        cell.setOnDragDetected(event -&gt; {</span>
+<span class="nc" id="L111">        	PseudoClass pressed = PseudoClass.getPseudoClass(&quot;pressed&quot;);</span>
+<span class="nc" id="L112">        	cell.pseudoClassStateChanged(pressed, false);</span>
+<span class="nc" id="L113">        	Dragboard db = cell.startDragAndDrop(TransferMode.ANY);</span>
+<span class="nc" id="L114">        	ClipboardContent content = new ClipboardContent();</span>
+<span class="nc" id="L115">            content.putString(&quot;Artist&quot;);</span>
+<span class="nc" id="L116">            db.setContent(content);</span>
+<span class="nc" id="L117">        	MusicPlayer.setDraggedItem(artist);</span>
+<span class="nc" id="L118">        	db.setDragView(cell.snapshot(null, null), cell.widthProperty().divide(2).get(), cell.heightProperty().divide(2).get());</span>
+<span class="nc" id="L119">            event.consume();</span>
+<span class="nc" id="L120">        });</span>
+
+<span class="nc" id="L122">        return cell;</span>
+    }
+    
+    @Override
+<span class="nc" id="L126">    public void play() {}</span>
+    
+    @Override
+    public void scroll(char letter) {
+    	
+<span class="nc" id="L131">    	int index = 0;</span>
+<span class="nc" id="L132">    	double cellHeight = 0;</span>
+<span class="nc" id="L133">    	ObservableList&lt;Node&gt; children = grid.getChildren();</span>
+
+<span class="nc bnc" id="L135" title="All 2 branches missed.">        for (Node node : children) {</span>
+
+<span class="nc" id="L137">            VBox cell = (VBox) node;</span>
+<span class="nc" id="L138">            cellHeight = cell.getHeight();</span>
+<span class="nc" id="L139">            Label label = (Label) cell.getChildren().get(1);</span>
+<span class="nc" id="L140">            char firstLetter = removeArticle(label.getText()).charAt(0);</span>
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            if (firstLetter &lt; letter) {</span>
+<span class="nc" id="L142">                index++;</span>
+            }
+<span class="nc" id="L144">        }</span>
+    	
+<span class="nc" id="L146">    	ScrollPane scrollpane = MusicPlayer.getMainController().getScrollPane();</span>
+    	
+<span class="nc" id="L148">    	double row = (index / 5) * cellHeight;</span>
+<span class="nc" id="L149">    	double finalVvalue = row / (grid.getHeight() - scrollpane.getHeight());</span>
+<span class="nc" id="L150">    	double startVvalue = scrollpane.getVvalue();</span>
+    	
+<span class="nc" id="L152">    	Animation scrollAnimation = new Transition() {</span>
+            {
+<span class="nc" id="L154">                setCycleDuration(Duration.millis(500));</span>
+<span class="nc" id="L155">            }</span>
+            protected void interpolate(double frac) {
+<span class="nc" id="L157">                double vValue = startVvalue + ((finalVvalue - startVvalue) * frac);</span>
+<span class="nc" id="L158">                scrollpane.setVvalue(vValue);</span>
+<span class="nc" id="L159">            }</span>
+        };
+        
+<span class="nc" id="L162">        scrollAnimation.play();</span>
+<span class="nc" id="L163">    }</span>
+    
+    private String removeArticle(String title) {
+
+<span class="nc" id="L167">        String arr[] = title.split(&quot; &quot;, 2);</span>
+
+<span class="nc bnc" id="L169" title="All 2 branches missed.">        if (arr.length &lt; 2) {</span>
+<span class="nc" id="L170">            return title;</span>
+        } else {
+
+<span class="nc" id="L173">            String firstWord = arr[0];</span>
+<span class="nc" id="L174">            String theRest = arr[1];</span>
+
+<span class="nc bnc" id="L176" title="All 2 branches missed.">            switch (firstWord) {</span>
+                case &quot;A&quot;:
+                case &quot;An&quot;:
+                case &quot;The&quot;:
+<span class="nc" id="L180">                    return theRest;</span>
+                default:
+<span class="nc" id="L182">                    return title;</span>
+            }
+        }
+    }
+    
+    public Song getSelectedSong() {
+<span class="nc" id="L188">    	return null;</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

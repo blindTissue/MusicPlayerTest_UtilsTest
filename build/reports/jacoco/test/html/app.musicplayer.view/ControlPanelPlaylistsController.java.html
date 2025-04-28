@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ControlPanelPlaylistsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">ControlPanelPlaylistsController.java</span></div><h1>ControlPanelPlaylistsController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.model.Library;
+import app.musicplayer.util.SubView;
+import app.musicplayer.util.XMLEditor;
+import javafx.event.Event;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.layout.Pane;
+
+<span class="nc" id="L15">public class ControlPanelPlaylistsController implements Initializable {</span>
+	
+	@FXML private Pane playButton;
+	@FXML private Pane deleteButton;
+	
+	@Override
+<span class="nc" id="L21">	public void initialize(URL location, ResourceBundle resources) {}</span>
+	
+	@FXML
+	private void playSong(Event e) {
+<span class="nc" id="L25">		SubView controller = MusicPlayer.getMainController().getSubViewController();</span>
+<span class="nc" id="L26">		controller.play();</span>
+<span class="nc" id="L27">		e.consume();</span>
+<span class="nc" id="L28">	}</span>
+	
+	@FXML
+	private void deleteSong(Event e) {		
+		// Gets the play lists controller sub view, which keeps track of the currently selected song.
+		// A PlayListsController object will always be returned since this button will only be visible
+		// when the user selects a song while in a play list.
+<span class="nc" id="L35">		PlaylistsController controller = (PlaylistsController) MusicPlayer.getMainController().getSubViewController();</span>
+		
+		// Retrieves play list and song id to search for the song in the xml file.
+<span class="nc" id="L38">		int selectedPlayListId = controller.getSelectedPlaylist().getId();</span>
+<span class="nc" id="L39">		int selectedSongId = controller.getSelectedSong().getId();</span>
+		
+		// Calls methods to delete selected song from play list in XML file.
+<span class="nc" id="L42">		XMLEditor.deleteSongFromPlaylist(selectedPlayListId, selectedSongId);</span>
+
+        // Removes the selected song from the playlist's song list in Library.
+<span class="nc" id="L45">        Library.getPlaylist(selectedPlayListId).removeSong(selectedSongId);</span>
+		
+		// Deletes the selected row from the table view.
+<span class="nc" id="L48">		controller.deleteSelectedRow();</span>
+		
+<span class="nc" id="L50">		e.consume();</span>
+<span class="nc" id="L51">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

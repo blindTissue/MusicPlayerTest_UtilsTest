@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<library>
+    <musicLibrary>
+        <fileNum>3</fileNum>
+        <lastId>22</lastId> </musicLibrary>
+    <songs>
+        <song>
+            <id>15</id>
+            <title>Playlist Song A</title>
+            <artist>Test Artist</artist>
+            <album>Test Album</album>
+            <length>180</length>
+            <trackNumber>1</trackNumber>
+            <discNumber>1</discNumber>
+            <playCount>5</playCount>
+            <playDate>2025-01-01T12:00:00</playDate>
+            <location>C:\Music\Test\PlaylistSongA.mp3</location>
+        </song>
+        <song>
+            <id>20</id>
+            <title>Playlist Song B</title>
+            <artist>Test Artist</artist>
+            <album>Test Album</album>
+            <length>200</length>
+            <trackNumber>2</trackNumber>
+            <discNumber>1</discNumber>
+            <playCount>2</playCount>
+            <playDate>2025-01-02T13:00:00</playDate>
+            <location>C:\Music\Test\PlaylistSongB.mp3</location>
+        </song>
+        <song>
+            <id>22</id>
+            <title>Playlist Song C</title>
+            <artist>Test Artist 2</artist>
+            <album>Test Album 2</album>
+            <length>210</length>
+            <trackNumber>1</trackNumber>
+            <discNumber>1</discNumber>
+            <playCount>0</playCount>
+            <playDate>2025-01-03T14:00:00</playDate>
+            <location>C:\Music\Test\PlaylistSongC.mp3</location>
+        </song>
+    </songs>
+    <playlists>
+        <playlist id="101">
+            <name>Favorites</name>
+            <songId>15</songId>  <songId>20</songId>  </playlist>
+        <playlist id="102">
+            <name>Workout</name>
+            <songId>22</songId>
+            <songId>15</songId>
+        </playlist>
+    </playlists>
+</library>

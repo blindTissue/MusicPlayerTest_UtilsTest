@@ -1,0 +1,179 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="util.SearchTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2025-04-28T16:23:09" hostname="Sungwons-MacBook-Pro" time="1.265">
+  <properties/>
+  <testcase name="searchInterruptionTest()" classname="util.SearchTest" time="0.292"/>
+  <testcase name="getResultTest()" classname="util.SearchTest" time="0.17"/>
+  <testcase name="AlbumComparisonTest()" classname="util.SearchTest" time="0.135"/>
+  <testcase name="SongComparisonTestA()" classname="util.SearchTest" time="0.112"/>
+  <testcase name="searchDoubleCallInterruptionTest()" classname="util.SearchTest" time="0.041"/>
+  <testcase name="ArtistComparisonTest()" classname="util.SearchTest" time="0.139"/>
+  <testcase name="ArtistComparisonTestA()" classname="util.SearchTest" time="0.138"/>
+  <testcase name="SongComparisonTest()" classname="util.SearchTest" time="0.111"/>
+  <testcase name="AlbumComparisonTestA()" classname="util.SearchTest" time="0.12"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[Apr 28, 2025 12:23:09 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:09 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Drones_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Drones_Quote.mp3:Invalid Frame:Tech_Drones_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Virtual_Reality_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Virtual_Reality_Quote.mp3:Invalid Frame:Tech_Virtual_Reality_Quote.mp3:No space to find another frame
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.AbstractID3v2Frame readIdentifier
+WARNING: Tech_Commercial_Logistics_Quote.mp3:No space to find another frame:
+Apr 28, 2025 12:23:10 PM org.jaudiotagger.tag.id3.ID3v24Tag readFrames
+WARNING: Tech_Commercial_Logistics_Quote.mp3:Invalid Frame:Tech_Commercial_Logistics_Quote.mp3:No space to find another frame
+]]></system-err>
+</testsuite>

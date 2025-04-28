@@ -1,0 +1,680 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Library.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.model</a> &gt; <span class="el_source">Library.java</span></div><h1>Library.java</h1><pre class="source lang-java linenums">package app.musicplayer.model;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpression;
+import javax.xml.xpath.XPathFactory;
+
+import org.jaudiotagger.audio.AudioFile;
+import org.jaudiotagger.audio.AudioFileIO;
+import org.jaudiotagger.audio.AudioHeader;
+import org.jaudiotagger.tag.FieldKey;
+import org.jaudiotagger.tag.Tag;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.util.ImportMusicTask;
+import app.musicplayer.util.Resources;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+
+<span class="nc" id="L41">public final class Library {</span>
+
+    private static final String ID = &quot;id&quot;;
+    private static final String TITLE = &quot;title&quot;;
+    private static final String ARTIST = &quot;artist&quot;;
+    private static final String ALBUM = &quot;album&quot;;
+    private static final String LENGTH = &quot;length&quot;;
+    private static final String TRACKNUMBER = &quot;trackNumber&quot;;
+    private static final String DISCNUMBER = &quot;discNumber&quot;;
+    private static final String PLAYCOUNT = &quot;playCount&quot;;
+    private static final String PLAYDATE = &quot;playDate&quot;;
+    private static final String LOCATION = &quot;location&quot;;
+
+    private static ArrayList&lt;Song&gt; songs;
+    private static ArrayList&lt;Artist&gt; artists;
+    private static ArrayList&lt;Album&gt; albums;
+    private static ArrayList&lt;Playlist&gt; playlists;
+    private static int maxProgress;
+    private static ImportMusicTask&lt;Boolean&gt; task;
+
+    public static void importMusic(String path, ImportMusicTask&lt;Boolean&gt; task) throws Exception {
+
+<span class="nc" id="L63">        Library.maxProgress = 0;</span>
+<span class="nc" id="L64">        Library.task = task;</span>
+
+<span class="nc" id="L66">        DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L67">        DocumentBuilder docBuilder = docFactory.newDocumentBuilder();</span>
+<span class="nc" id="L68">        Document doc = docBuilder.newDocument();</span>
+<span class="nc" id="L69">        Element library = doc.createElement(&quot;library&quot;);</span>
+<span class="nc" id="L70">        Element musicLibrary = doc.createElement(&quot;musicLibrary&quot;);</span>
+<span class="nc" id="L71">        Element songs = doc.createElement(&quot;songs&quot;);</span>
+<span class="nc" id="L72">        Element playlists = doc.createElement(&quot;playlists&quot;);</span>
+<span class="nc" id="L73">        Element nowPlayingList = doc.createElement(&quot;nowPlayingList&quot;);</span>
+
+        // Adds elements to library section.
+<span class="nc" id="L76">        doc.appendChild(library);</span>
+<span class="nc" id="L77">        library.appendChild(musicLibrary);</span>
+<span class="nc" id="L78">        library.appendChild(songs);</span>
+<span class="nc" id="L79">        library.appendChild(playlists);</span>
+<span class="nc" id="L80">        library.appendChild(nowPlayingList);</span>
+
+        // Creates sub sections for music library path, number of files, and last song id assigned.
+<span class="nc" id="L83">        Element musicLibraryPath = doc.createElement(&quot;path&quot;);</span>
+<span class="nc" id="L84">        Element musicLibraryFileNum = doc.createElement(&quot;fileNum&quot;);</span>
+<span class="nc" id="L85">        Element lastIdAssigned = doc.createElement(&quot;lastId&quot;);</span>
+
+        // Adds music library path to xml file.
+<span class="nc" id="L88">        musicLibraryPath.setTextContent(path);</span>
+<span class="nc" id="L89">        musicLibrary.appendChild(musicLibraryPath);</span>
+
+<span class="nc" id="L91">        int id = 0;</span>
+<span class="nc" id="L92">        File directory = new File(Paths.get(path).toUri());</span>
+
+<span class="nc" id="L94">        getMaxProgress(directory);</span>
+<span class="nc" id="L95">        Library.task.updateProgress(id, Library.maxProgress);</span>
+
+        // Writes xml file and returns the number of files in the music directory.
+<span class="nc" id="L98">        int i = writeXML(directory, doc, songs, id);</span>
+<span class="nc" id="L99">        String fileNumber = Integer.toString(i);</span>
+
+        // Adds the number of files in the music directory to the appropriate section in the xml file.
+<span class="nc" id="L102">        musicLibraryFileNum.setTextContent(fileNumber);</span>
+<span class="nc" id="L103">        musicLibrary.appendChild(musicLibraryFileNum);</span>
+
+        // Finds the last id that was assigned to a song and adds it to the xml file.
+<span class="nc" id="L106">        int j = i - 1;</span>
+<span class="nc" id="L107">        lastIdAssigned.setTextContent(Integer.toString(j));</span>
+<span class="nc" id="L108">        musicLibrary.appendChild(lastIdAssigned);</span>
+
+<span class="nc" id="L110">        TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="nc" id="L111">        Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="nc" id="L112">        transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);</span>
+<span class="nc" id="L113">        transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="nc" id="L114">        DOMSource source = new DOMSource(doc);</span>
+
+<span class="nc" id="L116">        File xmlFile = new File(Resources.JAR + &quot;library.xml&quot;);</span>
+
+<span class="nc" id="L118">        StreamResult result = new StreamResult(xmlFile);</span>
+<span class="nc" id="L119">        transformer.transform(source, result);</span>
+
+<span class="nc" id="L121">        Library.maxProgress = 0;</span>
+<span class="nc" id="L122">        Library.task = null;</span>
+<span class="nc" id="L123">    }</span>
+
+    private static void getMaxProgress(File directory) {
+<span class="nc" id="L126">        File[] files = directory.listFiles();</span>
+
+<span class="nc bnc" id="L128" title="All 2 branches missed.">        for (File file : files) {</span>
+<span class="nc bnc" id="L129" title="All 4 branches missed.">            if (file.isFile() &amp;&amp; isSupportedFileType(file.getName())) {</span>
+<span class="nc" id="L130">                Library.maxProgress++;</span>
+<span class="nc bnc" id="L131" title="All 2 branches missed.">            } else if (file.isDirectory()) {</span>
+<span class="nc" id="L132">                getMaxProgress(file);</span>
+            }
+        }
+<span class="nc" id="L135">    }</span>
+
+    private static int writeXML(File directory, Document doc, Element songs, int i) {
+<span class="nc" id="L138">        File[] files = directory.listFiles();</span>
+
+<span class="nc bnc" id="L140" title="All 2 branches missed.">        for (File file : files) {</span>
+<span class="nc bnc" id="L141" title="All 4 branches missed.">            if (file.isFile() &amp;&amp; isSupportedFileType(file.getName())) {</span>
+                try {
+
+<span class="nc" id="L144">                    AudioFile audioFile = AudioFileIO.read(file);</span>
+<span class="nc" id="L145">                    Tag tag = audioFile.getTag();</span>
+<span class="nc" id="L146">                    AudioHeader header = audioFile.getAudioHeader();</span>
+
+<span class="nc" id="L148">                    Element song = doc.createElement(&quot;song&quot;);</span>
+<span class="nc" id="L149">                    songs.appendChild(song);</span>
+
+<span class="nc" id="L151">                    Element id = doc.createElement(&quot;id&quot;);</span>
+<span class="nc" id="L152">                    Element title = doc.createElement(&quot;title&quot;);</span>
+<span class="nc" id="L153">                    Element artist = doc.createElement(&quot;artist&quot;);</span>
+<span class="nc" id="L154">                    Element album = doc.createElement(&quot;album&quot;);</span>
+<span class="nc" id="L155">                    Element length = doc.createElement(&quot;length&quot;);</span>
+<span class="nc" id="L156">                    Element trackNumber = doc.createElement(&quot;trackNumber&quot;);</span>
+<span class="nc" id="L157">                    Element discNumber = doc.createElement(&quot;discNumber&quot;);</span>
+<span class="nc" id="L158">                    Element playCount = doc.createElement(&quot;playCount&quot;);</span>
+<span class="nc" id="L159">                    Element playDate = doc.createElement(&quot;playDate&quot;);</span>
+<span class="nc" id="L160">                    Element location = doc.createElement(&quot;location&quot;);</span>
+
+<span class="nc" id="L162">                    id.setTextContent(Integer.toString(i++));</span>
+<span class="nc" id="L163">                    title.setTextContent(tag.getFirst(FieldKey.TITLE));</span>
+<span class="nc" id="L164">                    String artistTitle = tag.getFirst(FieldKey.ALBUM_ARTIST);</span>
+<span class="nc bnc" id="L165" title="All 6 branches missed.">                    if (artistTitle == null || artistTitle.equals(&quot;&quot;) || artistTitle.equals(&quot;null&quot;)) {</span>
+<span class="nc" id="L166">                        artistTitle = tag.getFirst(FieldKey.ARTIST);</span>
+                    }
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                    artist.setTextContent(</span>
+<span class="nc bnc" id="L169" title="All 4 branches missed.">                            (artistTitle == null || artistTitle.equals(&quot;&quot;) || artistTitle.equals(&quot;null&quot;)) ? &quot;&quot; : artistTitle</span>
+                    );
+<span class="nc" id="L171">                    album.setTextContent(tag.getFirst(FieldKey.ALBUM));</span>
+<span class="nc" id="L172">                    length.setTextContent(Integer.toString(header.getTrackLength()));</span>
+<span class="nc" id="L173">                    String track = tag.getFirst(FieldKey.TRACK);</span>
+<span class="nc bnc" id="L174" title="All 2 branches missed.">                    trackNumber.setTextContent(</span>
+<span class="nc bnc" id="L175" title="All 4 branches missed.">                            (track == null || track.equals(&quot;&quot;) || track.equals(&quot;null&quot;)) ? &quot;0&quot; : track</span>
+                    );
+<span class="nc" id="L177">                    String disc = tag.getFirst(FieldKey.DISC_NO);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">                    discNumber.setTextContent(</span>
+<span class="nc bnc" id="L179" title="All 4 branches missed.">                            (disc == null || disc.equals(&quot;&quot;) || disc.equals(&quot;null&quot;)) ? &quot;0&quot; : disc</span>
+                    );
+<span class="nc" id="L181">                    playCount.setTextContent(&quot;0&quot;);</span>
+<span class="nc" id="L182">                    playDate.setTextContent(LocalDateTime.now().toString());</span>
+<span class="nc" id="L183">                    location.setTextContent(Paths.get(file.getAbsolutePath()).toString());</span>
+
+<span class="nc" id="L185">                    song.appendChild(id);</span>
+<span class="nc" id="L186">                    song.appendChild(title);</span>
+<span class="nc" id="L187">                    song.appendChild(artist);</span>
+<span class="nc" id="L188">                    song.appendChild(album);</span>
+<span class="nc" id="L189">                    song.appendChild(length);</span>
+<span class="nc" id="L190">                    song.appendChild(trackNumber);</span>
+<span class="nc" id="L191">                    song.appendChild(discNumber);</span>
+<span class="nc" id="L192">                    song.appendChild(playCount);</span>
+<span class="nc" id="L193">                    song.appendChild(playDate);</span>
+<span class="nc" id="L194">                    song.appendChild(location);</span>
+
+<span class="nc" id="L196">                    task.updateProgress(i, Library.maxProgress);</span>
+
+<span class="nc" id="L198">                } catch (Exception ex) {</span>
+
+<span class="nc" id="L200">                    ex.printStackTrace();</span>
+<span class="nc" id="L201">                }</span>
+
+<span class="nc bnc" id="L203" title="All 2 branches missed.">            } else if (file.isDirectory()) {</span>
+
+<span class="nc" id="L205">                i = writeXML(file, doc, songs, i);</span>
+            }
+        }
+<span class="nc" id="L208">        return i;</span>
+    }
+
+    public static boolean isSupportedFileType(String fileName) {
+
+<span class="fc" id="L213">        String extension = &quot;&quot;;</span>
+<span class="fc" id="L214">        int i = fileName.lastIndexOf('.');</span>
+<span class="pc bpc" id="L215" title="1 of 2 branches missed.">        if (i &gt; 0) {</span>
+<span class="fc" id="L216">            extension = fileName.substring(i+1).toLowerCase();</span>
+        }
+<span class="pc bpc" id="L218" title="1 of 2 branches missed.">        switch (extension) {</span>
+            // MP3
+            case &quot;mp3&quot;:
+                // MP4
+            case &quot;mp4&quot;:
+            case &quot;m4a&quot;:
+            case &quot;m4v&quot;:
+                // WAV
+            case &quot;wav&quot;:
+<span class="fc" id="L227">                return true;</span>
+            default:
+<span class="nc" id="L229">                return false;</span>
+        }
+    }
+
+    /**
+     * Gets a list of songs.
+     * @return observable list of songs
+     */
+    public static ObservableList&lt;Song&gt; getSongs() {
+        // If the observable list of songs has not been initialized.
+<span class="pc bpc" id="L239" title="1 of 2 branches missed.">        if (songs == null) {</span>
+<span class="nc" id="L240">            songs = new ArrayList&lt;&gt;();</span>
+            // Updates the songs array list.
+<span class="nc" id="L242">            updateSongsList();</span>
+        }
+<span class="fc" id="L244">        return FXCollections.observableArrayList(songs);</span>
+    }
+
+    private static Song getSong(int id) {
+<span class="nc bnc" id="L248" title="All 2 branches missed.">        if (songs == null) {</span>
+<span class="nc" id="L249">            getSongs();</span>
+        }
+<span class="nc" id="L251">        return songs.get(id);</span>
+    }
+
+    public static Song getSong(String title) {
+<span class="nc bnc" id="L255" title="All 2 branches missed.">        if (songs == null) {</span>
+<span class="nc" id="L256">            getSongs();</span>
+        }
+<span class="nc" id="L258">        return songs.stream().filter(song -&gt; title.equals(song.getTitle())).findFirst().get();</span>
+    }
+
+    private static void updateSongsList() {
+        try {
+
+<span class="nc" id="L264">            XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L265">            factory.setProperty(&quot;javax.xml.stream.isCoalescing&quot;, true);</span>
+<span class="nc" id="L266">            FileInputStream is = new FileInputStream(new File(Resources.JAR + &quot;library.xml&quot;));</span>
+<span class="nc" id="L267">            XMLStreamReader reader = factory.createXMLStreamReader(is, &quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L269">            String element = &quot;&quot;;</span>
+<span class="nc" id="L270">            int id = -1;</span>
+<span class="nc" id="L271">            String title = null;</span>
+<span class="nc" id="L272">            String artist = null;</span>
+<span class="nc" id="L273">            String album = null;</span>
+<span class="nc" id="L274">            Duration length = null;</span>
+<span class="nc" id="L275">            int trackNumber = -1;</span>
+<span class="nc" id="L276">            int discNumber = -1;</span>
+<span class="nc" id="L277">            int playCount = -1;</span>
+<span class="nc" id="L278">            LocalDateTime playDate = null;</span>
+<span class="nc" id="L279">            String location = null;</span>
+
+<span class="nc bnc" id="L281" title="All 2 branches missed.">            while(reader.hasNext()) {</span>
+<span class="nc" id="L282">                reader.next();</span>
+
+<span class="nc bnc" id="L284" title="All 2 branches missed.">                if (reader.isWhiteSpace()) {</span>
+<span class="nc" id="L285">                    continue;</span>
+<span class="nc bnc" id="L286" title="All 2 branches missed.">                } else if (reader.isStartElement()) {</span>
+<span class="nc" id="L287">                    element = reader.getName().getLocalPart();</span>
+<span class="nc bnc" id="L288" title="All 2 branches missed.">                } else if (reader.isCharacters()) {</span>
+<span class="nc" id="L289">                    String value = reader.getText();</span>
+
+<span class="nc bnc" id="L291" title="All 11 branches missed.">                    switch (element) {</span>
+                        case ID:
+<span class="nc" id="L293">                            id = Integer.parseInt(value);</span>
+<span class="nc" id="L294">                            break;</span>
+                        case TITLE:
+<span class="nc" id="L296">                            title = value;</span>
+<span class="nc" id="L297">                            break;</span>
+                        case ARTIST:
+<span class="nc" id="L299">                            artist = value;</span>
+<span class="nc" id="L300">                            break;</span>
+                        case ALBUM:
+<span class="nc" id="L302">                            album = value;</span>
+<span class="nc" id="L303">                            break;</span>
+                        case LENGTH:
+<span class="nc" id="L305">                            length = Duration.ofSeconds(Long.parseLong(value));</span>
+<span class="nc" id="L306">                            break;</span>
+                        case TRACKNUMBER:
+<span class="nc" id="L308">                            trackNumber = Integer.parseInt(value);</span>
+<span class="nc" id="L309">                            break;</span>
+                        case DISCNUMBER:
+<span class="nc" id="L311">                            discNumber = Integer.parseInt(value);</span>
+<span class="nc" id="L312">                            break;</span>
+                        case PLAYCOUNT:
+<span class="nc" id="L314">                            playCount = Integer.parseInt(value);</span>
+<span class="nc" id="L315">                            break;</span>
+                        case PLAYDATE:
+<span class="nc" id="L317">                            playDate = LocalDateTime.parse(value);</span>
+<span class="nc" id="L318">                            break;</span>
+                        case LOCATION:
+<span class="nc" id="L320">                            location = value;</span>
+                            break;
+                    } // End switch
+<span class="nc bnc" id="L323" title="All 4 branches missed.">                } else if (reader.isEndElement() &amp;&amp; reader.getName().getLocalPart().equals(&quot;song&quot;)) {</span>
+
+<span class="nc" id="L325">                    songs.add(new Song(id, title, artist, album, length, trackNumber, discNumber, playCount, playDate, location));</span>
+<span class="nc" id="L326">                    id = -1;</span>
+<span class="nc" id="L327">                    title = null;</span>
+<span class="nc" id="L328">                    artist = null;</span>
+<span class="nc" id="L329">                    album = null;</span>
+<span class="nc" id="L330">                    length = null;</span>
+<span class="nc" id="L331">                    trackNumber = -1;</span>
+<span class="nc" id="L332">                    discNumber = -1;</span>
+<span class="nc" id="L333">                    playCount = -1;</span>
+<span class="nc" id="L334">                    playDate = null;</span>
+<span class="nc" id="L335">                    location = null;</span>
+
+<span class="nc bnc" id="L337" title="All 4 branches missed.">                } else if (reader.isEndElement() &amp;&amp; reader.getName().getLocalPart().equals(&quot;songs&quot;)) {</span>
+
+<span class="nc" id="L339">                    reader.close();</span>
+<span class="nc" id="L340">                    break;</span>
+                }
+            } // End while
+
+<span class="nc" id="L344">            reader.close();</span>
+
+<span class="nc" id="L346">        } catch (Exception ex) {</span>
+<span class="nc" id="L347">            ex.printStackTrace();</span>
+<span class="nc" id="L348">        }</span>
+<span class="nc" id="L349">    }</span>
+
+    /**
+     * Gets a list of albums.
+     *
+     * @return observable list of albums
+     */
+    public static ObservableList&lt;Album&gt; getAlbums() {
+        // If the observable list of albums has not been initialized.
+<span class="pc bpc" id="L358" title="1 of 2 branches missed.">        if (albums == null) {</span>
+<span class="nc bnc" id="L359" title="All 2 branches missed.">            if (songs == null) {</span>
+<span class="nc" id="L360">                getSongs();</span>
+            }
+            // Updates the albums array list.
+<span class="nc" id="L363">            updateAlbumsList();</span>
+        }
+<span class="fc" id="L365">        return FXCollections.observableArrayList(albums);</span>
+    }
+
+    public static Album getAlbum(String title) {
+<span class="nc bnc" id="L369" title="All 2 branches missed.">        if (albums == null) {</span>
+<span class="nc" id="L370">            getAlbums();</span>
+        }
+<span class="nc" id="L372">        return albums.stream().filter(album -&gt; title.equals(album.getTitle())).findFirst().get();</span>
+    }
+
+    private static void updateAlbumsList() {
+<span class="nc" id="L376">        albums = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L378">        TreeMap&lt;String, List&lt;Song&gt;&gt; albumMap = new TreeMap&lt;&gt;(</span>
+<span class="nc" id="L379">                songs.stream()</span>
+<span class="nc bnc" id="L380" title="All 2 branches missed.">                        .filter(song -&gt; song.getAlbum() != null)</span>
+<span class="nc" id="L381">                        .collect(Collectors.groupingBy(Song::getAlbum))</span>
+        );
+
+<span class="nc" id="L384">        int id = 0;</span>
+
+<span class="nc bnc" id="L386" title="All 2 branches missed.">        for (Map.Entry&lt;String, List&lt;Song&gt;&gt; entry : albumMap.entrySet()) {</span>
+<span class="nc" id="L387">            ArrayList&lt;Song&gt; songs = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L389">            songs.addAll(entry.getValue());</span>
+
+<span class="nc" id="L391">            TreeMap&lt;String, List&lt;Song&gt;&gt; artistMap = new TreeMap&lt;&gt;(</span>
+<span class="nc" id="L392">                    songs.stream()</span>
+<span class="nc bnc" id="L393" title="All 2 branches missed.">                            .filter(song -&gt; song.getArtist() != null)</span>
+<span class="nc" id="L394">                            .collect(Collectors.groupingBy(Song::getArtist))</span>
+            );
+
+<span class="nc bnc" id="L397" title="All 2 branches missed.">            for (Map.Entry&lt;String, List&lt;Song&gt;&gt; e : artistMap.entrySet()) {</span>
+<span class="nc" id="L398">                ArrayList&lt;Song&gt; albumSongs = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L399">                String artist = e.getValue().get(0).getArtist();</span>
+
+<span class="nc" id="L401">                albumSongs.addAll(e.getValue());</span>
+
+<span class="nc" id="L403">                albums.add(new Album(id++, entry.getKey(), artist, albumSongs));</span>
+<span class="nc" id="L404">            }</span>
+<span class="nc" id="L405">        }</span>
+<span class="nc" id="L406">    }</span>
+
+    /**
+     * Gets a list of artists.
+     *
+     * @return observable list of artists
+     */
+    public static ObservableList&lt;Artist&gt; getArtists() {
+<span class="pc bpc" id="L414" title="1 of 2 branches missed.">        if (artists == null) {</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">            if (albums == null) {</span>
+<span class="nc" id="L416">                getAlbums();</span>
+            }
+            // Updates the artists array list.
+<span class="nc" id="L419">            updateArtistsList();</span>
+        }
+<span class="fc" id="L421">        return FXCollections.observableArrayList(artists);</span>
+    }
+
+    public static Artist getArtist(String title) {
+<span class="nc bnc" id="L425" title="All 2 branches missed.">        if (artists == null) {</span>
+<span class="nc" id="L426">            getArtists();</span>
+        }
+<span class="nc" id="L428">        return artists.stream().filter(artist -&gt; title.equals(artist.getTitle())).findFirst().get();</span>
+    }
+
+    private static void updateArtistsList() {
+<span class="nc" id="L432">        artists = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L434">        TreeMap&lt;String, List&lt;Album&gt;&gt; artistMap = new TreeMap&lt;&gt;(</span>
+<span class="nc" id="L435">                albums.stream()</span>
+<span class="nc bnc" id="L436" title="All 2 branches missed.">                        .filter(album -&gt; album.getArtist() != null)</span>
+<span class="nc" id="L437">                        .collect(Collectors.groupingBy(Album::getArtist))</span>
+        );
+
+<span class="nc bnc" id="L440" title="All 2 branches missed.">        for (Map.Entry&lt;String, List&lt;Album&gt;&gt; entry : artistMap.entrySet()) {</span>
+
+<span class="nc" id="L442">            ArrayList&lt;Album&gt; albums = new ArrayList&lt;&gt;();</span>
+
+<span class="nc" id="L444">            albums.addAll(entry.getValue());</span>
+
+<span class="nc" id="L446">            artists.add(new Artist(entry.getKey(), albums));</span>
+<span class="nc" id="L447">        }</span>
+<span class="nc" id="L448">    }</span>
+
+    public static void addPlaylist(String text) {
+
+<span class="nc" id="L452">        Thread thread = new Thread(() -&gt; {</span>
+
+<span class="nc" id="L454">            int i = playlists.size() - 2;</span>
+<span class="nc" id="L455">            playlists.add(new Playlist(i, text, new ArrayList&lt;&gt;()));</span>
+
+            try {
+<span class="nc" id="L458">                DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L459">                DocumentBuilder docBuilder = docFactory.newDocumentBuilder();</span>
+<span class="nc" id="L460">                Document doc = docBuilder.parse(Resources.JAR + &quot;library.xml&quot;);</span>
+
+<span class="nc" id="L462">                XPathFactory xPathfactory = XPathFactory.newInstance();</span>
+<span class="nc" id="L463">                XPath xpath = xPathfactory.newXPath();</span>
+
+<span class="nc" id="L465">                XPathExpression expr = xpath.compile(&quot;/library/playlists&quot;);</span>
+<span class="nc" id="L466">                Node playlists = ((NodeList) expr.evaluate(doc, XPathConstants.NODESET)).item(0);</span>
+
+<span class="nc" id="L468">                Element playlist = doc.createElement(&quot;playlist&quot;);</span>
+<span class="nc" id="L469">                playlist.setAttribute(&quot;id&quot;, Integer.toString(i));</span>
+<span class="nc" id="L470">                playlist.setAttribute(TITLE, text);</span>
+<span class="nc" id="L471">                playlists.appendChild(playlist);</span>
+
+<span class="nc" id="L473">                TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="nc" id="L474">                Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="nc" id="L475">                transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);</span>
+<span class="nc" id="L476">                transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="nc" id="L477">                DOMSource source = new DOMSource(doc);</span>
+<span class="nc" id="L478">                File xmlFile = new File(Resources.JAR + &quot;library.xml&quot;);</span>
+<span class="nc" id="L479">                StreamResult result = new StreamResult(xmlFile);</span>
+<span class="nc" id="L480">                transformer.transform(source, result);</span>
+<span class="nc" id="L481">            } catch (Exception ex) {</span>
+<span class="nc" id="L482">                ex.printStackTrace();</span>
+<span class="nc" id="L483">            }</span>
+
+<span class="nc" id="L485">        });</span>
+
+<span class="nc" id="L487">        thread.start();</span>
+<span class="nc" id="L488">    }</span>
+
+    public static void removePlaylist(Playlist playlist) {
+<span class="nc" id="L491">        playlists.remove(playlist);</span>
+<span class="nc" id="L492">    }</span>
+
+    public static ObservableList&lt;Playlist&gt; getPlaylists() {
+<span class="nc bnc" id="L495" title="All 2 branches missed.">        if (playlists == null) {</span>
+
+<span class="nc" id="L497">            playlists = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L498">            int id = 0;</span>
+
+            try {
+<span class="nc" id="L501">                XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L502">                factory.setProperty(&quot;javax.xml.stream.isCoalescing&quot;, true);</span>
+<span class="nc" id="L503">                FileInputStream is = new FileInputStream(new File(Resources.JAR + &quot;library.xml&quot;));</span>
+<span class="nc" id="L504">                XMLStreamReader reader = factory.createXMLStreamReader(is, &quot;UTF-8&quot;);</span>
+
+                String element;
+<span class="nc" id="L507">                boolean isPlaylist = false;</span>
+<span class="nc" id="L508">                String title = null;</span>
+<span class="nc" id="L509">                ArrayList&lt;Song&gt; songs = new ArrayList&lt;&gt;();</span>
+
+<span class="nc bnc" id="L511" title="All 2 branches missed.">                while(reader.hasNext()) {</span>
+<span class="nc" id="L512">                    reader.next();</span>
+<span class="nc bnc" id="L513" title="All 2 branches missed.">                    if (reader.isWhiteSpace()) {</span>
+<span class="nc" id="L514">                        continue;</span>
+<span class="nc bnc" id="L515" title="All 2 branches missed.">                    } else if (reader.isStartElement()) {</span>
+<span class="nc" id="L516">                        element = reader.getName().getLocalPart();</span>
+
+                        // If the element is a play list, reads the element attributes to retrieve
+                        // the play list id and title.
+<span class="nc bnc" id="L520" title="All 2 branches missed.">                        if (element.equals(&quot;playlist&quot;)) {</span>
+<span class="nc" id="L521">                            isPlaylist = true;</span>
+
+<span class="nc" id="L523">                            id = Integer.parseInt(reader.getAttributeValue(0));</span>
+<span class="nc" id="L524">                            title = reader.getAttributeValue(1);</span>
+                        }
+<span class="nc bnc" id="L526" title="All 4 branches missed.">                    } else if (reader.isCharacters() &amp;&amp; isPlaylist) {</span>
+                        // Retrieves the reader value (song ID), gets the song and adds it to the songs list.
+<span class="nc" id="L528">                        String value = reader.getText();</span>
+<span class="nc" id="L529">                        songs.add(getSong(Integer.parseInt(value)));</span>
+<span class="nc bnc" id="L530" title="All 4 branches missed.">                    } else if (reader.isEndElement() &amp;&amp; reader.getName().getLocalPart().equals(&quot;playlist&quot;)) {</span>
+                        // If the play list id, title, and songs have been retrieved, a new play list is created
+                        // and the values reset.
+<span class="nc" id="L533">                        playlists.add(new Playlist(id, title, songs));</span>
+<span class="nc" id="L534">                        id = -1;</span>
+<span class="nc" id="L535">                        title = null;</span>
+<span class="nc" id="L536">                        songs = new ArrayList&lt;&gt;();</span>
+<span class="nc bnc" id="L537" title="All 4 branches missed.">                    } else if (reader.isEndElement() &amp;&amp; reader.getName().getLocalPart().equals(&quot;playlists&quot;)) {</span>
+<span class="nc" id="L538">                        reader.close();</span>
+<span class="nc" id="L539">                        break;</span>
+                    }
+                }
+<span class="nc" id="L542">                reader.close();</span>
+<span class="nc" id="L543">            } catch (Exception ex) {</span>
+<span class="nc" id="L544">                ex.printStackTrace();</span>
+<span class="nc" id="L545">            }</span>
+
+<span class="nc" id="L547">            playlists.sort((x, y) -&gt; {</span>
+<span class="nc bnc" id="L548" title="All 2 branches missed.">                if (x.getId() &lt; y.getId()) {</span>
+<span class="nc" id="L549">                    return 1;</span>
+<span class="nc bnc" id="L550" title="All 2 branches missed.">                } else if (x.getId() &gt; y.getId()) {</span>
+<span class="nc" id="L551">                    return -1;</span>
+                } else {
+<span class="nc" id="L553">                    return 0;</span>
+                }
+            });
+
+<span class="nc" id="L557">            playlists.add(new MostPlayedPlaylist(-2));</span>
+<span class="nc" id="L558">            playlists.add(new RecentlyPlayedPlaylist(-1));</span>
+<span class="nc" id="L559">        } else {</span>
+<span class="nc" id="L560">            playlists.sort((x, y) -&gt; {</span>
+<span class="nc bnc" id="L561" title="All 2 branches missed.">                if (x.getId() &lt; y.getId()) {</span>
+<span class="nc" id="L562">                    return 1;</span>
+<span class="nc bnc" id="L563" title="All 2 branches missed.">                } else if (x.getId() &gt; y.getId()) {</span>
+<span class="nc" id="L564">                    return -1;</span>
+                } else {
+<span class="nc" id="L566">                    return 0;</span>
+                }
+            });
+        }
+<span class="nc" id="L570">        return FXCollections.observableArrayList(playlists);</span>
+    }
+
+    public static Playlist getPlaylist(int id) {
+<span class="nc bnc" id="L574" title="All 2 branches missed.">        if (playlists == null) {</span>
+<span class="nc" id="L575">            getPlaylists();</span>
+        }
+        // Gets the play list size.
+<span class="nc" id="L578">        int playListSize = Library.getPlaylists().size();</span>
+        // The +2 takes into account the two default play lists.
+        // The -1 is used because size() starts at 1 but indexes start at 0.
+<span class="nc" id="L581">        return playlists.get(playListSize - (id + 2) - 1);</span>
+    }
+
+    public static Playlist getPlaylist(String title) {
+<span class="nc bnc" id="L585" title="All 2 branches missed.">        if (playlists == null) {</span>
+<span class="nc" id="L586">            getPlaylists();</span>
+        }
+<span class="nc" id="L588">        return playlists.stream().filter(playlist -&gt; title.equals(playlist.getTitle())).findFirst().get();</span>
+    }
+
+    public static ArrayList&lt;Song&gt; loadPlayingList() {
+
+<span class="nc" id="L593">        ArrayList&lt;Song&gt; nowPlayingList = new ArrayList&lt;&gt;();</span>
+
+        try {
+
+<span class="nc" id="L597">            XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L598">            FileInputStream is = new FileInputStream(new File(Resources.JAR + &quot;library.xml&quot;));</span>
+<span class="nc" id="L599">            XMLStreamReader reader = factory.createXMLStreamReader(is, &quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L601">            String element = &quot;&quot;;</span>
+<span class="nc" id="L602">            boolean isNowPlayingList = false;</span>
+
+<span class="nc bnc" id="L604" title="All 2 branches missed.">            while(reader.hasNext()) {</span>
+<span class="nc" id="L605">                reader.next();</span>
+<span class="nc bnc" id="L606" title="All 2 branches missed.">                if (reader.isWhiteSpace()) {</span>
+<span class="nc" id="L607">                    continue;</span>
+<span class="nc bnc" id="L608" title="All 4 branches missed.">                } else if (reader.isCharacters() &amp;&amp; isNowPlayingList) {</span>
+<span class="nc" id="L609">                    String value = reader.getText();</span>
+<span class="nc bnc" id="L610" title="All 2 branches missed.">                    if (element.equals(ID)) {</span>
+<span class="nc" id="L611">                        nowPlayingList.add(getSong(Integer.parseInt(value)));</span>
+                    }
+<span class="nc bnc" id="L613" title="All 2 branches missed.">                } else if (reader.isStartElement()) {</span>
+<span class="nc" id="L614">                    element = reader.getName().getLocalPart();</span>
+<span class="nc bnc" id="L615" title="All 2 branches missed.">                    if (element.equals(&quot;nowPlayingList&quot;)) {</span>
+<span class="nc" id="L616">                        isNowPlayingList = true;</span>
+                    }
+<span class="nc bnc" id="L618" title="All 4 branches missed.">                } else if (reader.isEndElement() &amp;&amp; reader.getName().getLocalPart().equals(&quot;nowPlayingList&quot;)) {</span>
+<span class="nc" id="L619">                    reader.close();</span>
+<span class="nc" id="L620">                    break;</span>
+                }
+            }
+
+<span class="nc" id="L624">            reader.close();</span>
+
+<span class="nc" id="L626">        } catch (Exception ex) {</span>
+
+<span class="nc" id="L628">            ex.printStackTrace();</span>
+<span class="nc" id="L629">        }</span>
+
+<span class="nc" id="L631">        return nowPlayingList;</span>
+    }
+
+    public static void savePlayingList() {
+
+<span class="nc" id="L636">        Thread thread = new Thread(() -&gt; {</span>
+
+            try {
+
+<span class="nc" id="L640">                DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();</span>
+<span class="nc" id="L641">                DocumentBuilder docBuilder = docFactory.newDocumentBuilder();</span>
+<span class="nc" id="L642">                Document doc = docBuilder.parse(Resources.JAR + &quot;library.xml&quot;);</span>
+
+<span class="nc" id="L644">                XPathFactory xPathfactory = XPathFactory.newInstance();</span>
+<span class="nc" id="L645">                XPath xpath = xPathfactory.newXPath();</span>
+
+<span class="nc" id="L647">                XPathExpression expr = xpath.compile(&quot;/library/nowPlayingList&quot;);</span>
+<span class="nc" id="L648">                Node playingList = ((NodeList) expr.evaluate(doc, XPathConstants.NODESET)).item(0);</span>
+
+<span class="nc" id="L650">                NodeList nodes = playingList.getChildNodes();</span>
+<span class="nc bnc" id="L651" title="All 2 branches missed.">                while (nodes.getLength() &gt; 0) {</span>
+<span class="nc" id="L652">                    playingList.removeChild(nodes.item(0));</span>
+                }
+
+<span class="nc bnc" id="L655" title="All 2 branches missed.">                for (Song song : MusicPlayer.getNowPlayingList()) {</span>
+<span class="nc" id="L656">                    Element id = doc.createElement(ID);</span>
+<span class="nc" id="L657">                    id.setTextContent(Integer.toString(song.getId()));</span>
+<span class="nc" id="L658">                    playingList.appendChild(id);</span>
+<span class="nc" id="L659">                }</span>
+
+<span class="nc" id="L661">                TransformerFactory transformerFactory = TransformerFactory.newInstance();</span>
+<span class="nc" id="L662">                Transformer transformer = transformerFactory.newTransformer();</span>
+<span class="nc" id="L663">                transformer.setOutputProperty(&quot;{http://xml.apache.org/xslt}indent-amount&quot;, &quot;4&quot;);</span>
+<span class="nc" id="L664">                transformer.setOutputProperty(OutputKeys.INDENT, &quot;yes&quot;);</span>
+<span class="nc" id="L665">                DOMSource source = new DOMSource(doc);</span>
+<span class="nc" id="L666">                File xmlFile = new File(Resources.JAR + &quot;library.xml&quot;);</span>
+<span class="nc" id="L667">                StreamResult result = new StreamResult(xmlFile);</span>
+<span class="nc" id="L668">                transformer.transform(source, result);</span>
+
+<span class="nc" id="L670">            } catch (Exception ex) {</span>
+
+<span class="nc" id="L672">                ex.printStackTrace();</span>
+<span class="nc" id="L673">            }</span>
+
+<span class="nc" id="L675">        });</span>
+
+<span class="nc" id="L677">        thread.start();</span>
+<span class="nc" id="L678">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

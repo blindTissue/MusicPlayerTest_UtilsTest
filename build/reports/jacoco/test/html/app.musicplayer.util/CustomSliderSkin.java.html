@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CustomSliderSkin.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.util</a> &gt; <span class="el_source">CustomSliderSkin.java</span></div><h1>CustomSliderSkin.java</h1><pre class="source lang-java linenums">package app.musicplayer.util;
+
+import com.sun.javafx.scene.control.behavior.SliderBehavior;
+import com.sun.javafx.scene.control.skin.BehaviorSkinBase;
+import javafx.animation.Animation;
+import javafx.animation.Transition;
+import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
+import javafx.geometry.Side;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.StackPane;
+import javafx.util.Duration;
+import javafx.util.StringConverter;
+
+/**
+ * Region/css based skin for slider.
+ *
+ */
+@SuppressWarnings(&quot;restriction&quot;)
+public class CustomSliderSkin extends BehaviorSkinBase&lt;Slider, SliderBehavior&gt; {
+
+    // Track if slider is vertical/horizontal and cause re layout.
+<span class="fc" id="L24">    private NumberAxis tickLine = null;</span>
+<span class="fc" id="L25">    private double trackToTickGap = 2;</span>
+
+    private boolean showTickMarks;
+    private double thumbWidth;
+
+    private double trackStart;
+    private double trackLength;
+    private double thumbTop;
+    private double thumbLeft;
+    private double preDragThumbPos;
+    private Point2D dragStart; // in skin coordinates
+
+    private StackPane thumb;
+    private StackPane track;
+<span class="fc" id="L39">    private boolean trackClicked = false;</span>
+
+    public CustomSliderSkin(Slider slider) {
+<span class="fc" id="L42">        super(slider, new SliderBehavior(slider));</span>
+
+<span class="fc" id="L44">        initialize();</span>
+<span class="fc" id="L45">        slider.requestLayout();</span>
+<span class="fc" id="L46">        registerChangeListener(slider.minProperty(), &quot;MIN&quot;);</span>
+<span class="fc" id="L47">        registerChangeListener(slider.maxProperty(), &quot;MAX&quot;);</span>
+<span class="fc" id="L48">        registerChangeListener(slider.valueProperty(), &quot;VALUE&quot;);</span>
+<span class="fc" id="L49">        registerChangeListener(slider.orientationProperty(), &quot;ORIENTATION&quot;);</span>
+<span class="fc" id="L50">        registerChangeListener(slider.showTickMarksProperty(), &quot;SHOW_TICK_MARKS&quot;);</span>
+<span class="fc" id="L51">        registerChangeListener(slider.showTickLabelsProperty(), &quot;SHOW_TICK_LABELS&quot;);</span>
+<span class="fc" id="L52">        registerChangeListener(slider.majorTickUnitProperty(), &quot;MAJOR_TICK_UNIT&quot;);</span>
+<span class="fc" id="L53">        registerChangeListener(slider.minorTickCountProperty(), &quot;MINOR_TICK_COUNT&quot;);</span>
+<span class="fc" id="L54">        registerChangeListener(slider.labelFormatterProperty(), &quot;TICK_LABEL_FORMATTER&quot;);</span>
+<span class="fc" id="L55">    }</span>
+
+    private void initialize() {
+<span class="fc" id="L58">        thumb = new StackPane();</span>
+<span class="fc" id="L59">        thumb.getStyleClass().setAll(&quot;thumb&quot;);</span>
+<span class="fc" id="L60">        track = new StackPane();</span>
+<span class="fc" id="L61">        track.getStyleClass().setAll(&quot;track&quot;);</span>
+
+<span class="fc" id="L63">        getChildren().clear();</span>
+<span class="fc" id="L64">        getChildren().addAll(track, thumb);</span>
+<span class="fc" id="L65">        setShowTickMarks(getSkinnable().isShowTickMarks(), getSkinnable().isShowTickLabels());</span>
+<span class="fc" id="L66">        track.setOnMousePressed(me -&gt; {</span>
+<span class="fc" id="L67">            trackClicked = true;</span>
+<span class="fc" id="L68">            getBehavior().trackPress(me, (me.getX() / trackLength));</span>
+<span class="fc" id="L69">            getBehavior().thumbPressed(me, 0.0f);</span>
+<span class="fc" id="L70">            dragStart = track.localToParent(me.getX(), me.getY());</span>
+<span class="fc" id="L71">            preDragThumbPos = (me.getX() / trackLength);</span>
+<span class="fc" id="L72">            thumbPressAnimation.play();</span>
+<span class="fc" id="L73">        });</span>
+
+<span class="fc" id="L75">        track.setOnMouseReleased(me -&gt; {</span>
+<span class="fc" id="L76">            getBehavior().thumbReleased(me);</span>
+<span class="fc" id="L77">            trackClicked = false;</span>
+<span class="fc" id="L78">            thumbReleaseAnimation.play();</span>
+<span class="fc" id="L79">        });</span>
+
+<span class="fc" id="L81">        track.setOnMouseDragged(me -&gt; {</span>
+<span class="fc" id="L82">            Point2D cur = track.localToParent(me.getX(), me.getY());</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">            double dragPos = (getSkinnable().getOrientation() == Orientation.HORIZONTAL)?</span>
+<span class="fc" id="L84">                cur.getX() - dragStart.getX() : -(cur.getY() - dragStart.getY());</span>
+<span class="fc" id="L85">            getBehavior().thumbDragged(me, preDragThumbPos + dragPos / trackLength);</span>
+<span class="fc" id="L86">        });</span>
+
+<span class="fc" id="L88">        thumb.setOnMousePressed(me -&gt; {</span>
+<span class="fc" id="L89">            getBehavior().thumbPressed(me, 0.0f);</span>
+<span class="fc" id="L90">            dragStart = thumb.localToParent(me.getX(), me.getY());</span>
+<span class="fc" id="L91">            preDragThumbPos = (getSkinnable().getValue() - getSkinnable().getMin()) /</span>
+<span class="fc" id="L92">                    (getSkinnable().getMax() - getSkinnable().getMin());</span>
+<span class="fc" id="L93">            thumbPressAnimation.play();</span>
+<span class="fc" id="L94">        });</span>
+
+<span class="fc" id="L96">        thumb.setOnMouseReleased(me -&gt; {</span>
+<span class="fc" id="L97">            getBehavior().thumbReleased(me);</span>
+<span class="fc" id="L98">            thumbReleaseAnimation.play();</span>
+<span class="fc" id="L99">        });</span>
+
+<span class="fc" id="L101">        thumb.setOnMouseDragged(me -&gt; {</span>
+<span class="fc" id="L102">            Point2D cur = thumb.localToParent(me.getX(), me.getY());</span>
+<span class="fc bfc" id="L103" title="All 2 branches covered.">            double dragPos = (getSkinnable().getOrientation() == Orientation.HORIZONTAL)?</span>
+<span class="fc" id="L104">                cur.getX() - dragStart.getX() : -(cur.getY() - dragStart.getY());</span>
+<span class="fc" id="L105">            getBehavior().thumbDragged(me, preDragThumbPos + dragPos / trackLength);</span>
+<span class="fc" id="L106">        });</span>
+<span class="fc" id="L107">    }</span>
+    
+    private void setShowTickMarks(boolean ticksVisible, boolean labelsVisible) {
+<span class="fc bfc" id="L110" title="All 4 branches covered.">        showTickMarks = (ticksVisible || labelsVisible);</span>
+<span class="fc" id="L111">        Slider slider = getSkinnable();</span>
+<span class="fc bfc" id="L112" title="All 2 branches covered.">        if (showTickMarks) {</span>
+<span class="fc bfc" id="L113" title="All 2 branches covered.">            if (tickLine == null) {</span>
+<span class="fc" id="L114">                tickLine = new NumberAxis();</span>
+<span class="fc" id="L115">                tickLine.setAutoRanging(false);</span>
+<span class="pc bpc" id="L116" title="1 of 4 branches missed.">                tickLine.setSide(slider.getOrientation() == Orientation.VERTICAL ? Side.RIGHT : (slider.getOrientation() == null) ? Side.RIGHT: Side.BOTTOM);</span>
+<span class="fc" id="L117">                tickLine.setUpperBound(slider.getMax());</span>
+<span class="fc" id="L118">                tickLine.setLowerBound(slider.getMin());</span>
+<span class="fc" id="L119">                tickLine.setTickUnit(slider.getMajorTickUnit());</span>
+<span class="fc" id="L120">                tickLine.setTickMarkVisible(ticksVisible);</span>
+<span class="fc" id="L121">                tickLine.setTickLabelsVisible(labelsVisible);</span>
+<span class="fc" id="L122">                tickLine.setMinorTickVisible(ticksVisible);</span>
+                // Add 1 to the slider minor tick count since the axis draws one
+                // less minor ticks than the number given.
+<span class="fc" id="L125">                tickLine.setMinorTickCount(Math.max(slider.getMinorTickCount(),0) + 1);</span>
+<span class="fc bfc" id="L126" title="All 2 branches covered.">                if (slider.getLabelFormatter() != null) {</span>
+<span class="fc" id="L127">                    tickLine.setTickLabelFormatter(stringConverterWrapper);</span>
+                }
+<span class="fc" id="L129">                getChildren().clear();</span>
+<span class="fc" id="L130">                getChildren().addAll(tickLine, track, thumb);</span>
+            } else {
+<span class="fc" id="L132">                tickLine.setTickLabelsVisible(labelsVisible);</span>
+<span class="fc" id="L133">                tickLine.setTickMarkVisible(ticksVisible);</span>
+<span class="fc" id="L134">                tickLine.setMinorTickVisible(ticksVisible);</span>
+            }
+        } 
+        else  {
+<span class="fc" id="L138">            getChildren().clear();</span>
+<span class="fc" id="L139">            getChildren().addAll(track, thumb);</span>
+        }
+
+<span class="fc" id="L142">        getSkinnable().requestLayout();</span>
+<span class="fc" id="L143">    }    </span>
+    
+    public StackPane getThumb() {
+<span class="fc" id="L146">    	return thumb;</span>
+    }
+    
+    public StackPane getTrack() {
+<span class="fc" id="L150">    	return track;</span>
+    }
+
+<span class="fc" id="L153">    private StringConverter&lt;Number&gt; stringConverterWrapper = new StringConverter&lt;Number&gt;() {</span>
+<span class="fc" id="L154">        Slider slider = getSkinnable();</span>
+        @Override public String toString(Number object) {
+<span class="fc bfc" id="L156" title="All 2 branches covered.">            return(object != null) ? slider.getLabelFormatter().toString(object.doubleValue()) : &quot;&quot;;</span>
+        }
+        @Override public Number fromString(String string) {
+<span class="fc" id="L159">            return slider.getLabelFormatter().fromString(string);</span>
+        }
+    };
+
+    @Override protected void handleControlPropertyChanged(String p) {
+<span class="fc" id="L164">        super.handleControlPropertyChanged(p);</span>
+<span class="fc" id="L165">        Slider slider = getSkinnable();</span>
+<span class="fc bfc" id="L166" title="All 2 branches covered.">        if (&quot;ORIENTATION&quot;.equals(p)) {</span>
+<span class="pc bpc" id="L167" title="1 of 4 branches missed.">            if (showTickMarks &amp;&amp; tickLine != null) {</span>
+<span class="fc bfc" id="L168" title="All 4 branches covered.">                tickLine.setSide(slider.getOrientation() == Orientation.VERTICAL ? Side.RIGHT : (slider.getOrientation() == null) ? Side.RIGHT: Side.BOTTOM);</span>
+            }
+<span class="fc" id="L170">            getSkinnable().requestLayout();</span>
+<span class="fc bfc" id="L171" title="All 2 branches covered.">        } else if (&quot;VALUE&quot;.equals(p)) {</span>
+            // Only animate thumb if the track was clicked, not if the thumb is dragged
+<span class="fc" id="L173">            positionThumb(trackClicked);</span>
+<span class="fc bfc" id="L174" title="All 2 branches covered.">        } else if (&quot;MIN&quot;.equals(p) ) {</span>
+<span class="pc bpc" id="L175" title="1 of 4 branches missed.">            if (showTickMarks &amp;&amp; tickLine != null) {</span>
+<span class="fc" id="L176">                tickLine.setLowerBound(slider.getMin());</span>
+            }
+<span class="fc" id="L178">            getSkinnable().requestLayout();</span>
+<span class="fc bfc" id="L179" title="All 2 branches covered.">        } else if (&quot;MAX&quot;.equals(p)) {</span>
+<span class="pc bpc" id="L180" title="1 of 4 branches missed.">            if (showTickMarks &amp;&amp; tickLine != null) {</span>
+<span class="fc" id="L181">                tickLine.setUpperBound(slider.getMax());</span>
+            }
+<span class="fc" id="L183">            getSkinnable().requestLayout();</span>
+<span class="fc bfc" id="L184" title="All 4 branches covered.">        } else if (&quot;SHOW_TICK_MARKS&quot;.equals(p) || &quot;SHOW_TICK_LABELS&quot;.equals(p)) {</span>
+<span class="fc" id="L185">            setShowTickMarks(slider.isShowTickMarks(), slider.isShowTickLabels());</span>
+<span class="fc bfc" id="L186" title="All 2 branches covered.">        }  else if (&quot;MAJOR_TICK_UNIT&quot;.equals(p)) {</span>
+<span class="fc bfc" id="L187" title="All 2 branches covered.">            if (tickLine != null) {</span>
+<span class="fc" id="L188">                tickLine.setTickUnit(slider.getMajorTickUnit());</span>
+<span class="fc" id="L189">                getSkinnable().requestLayout();</span>
+            }
+<span class="fc bfc" id="L191" title="All 2 branches covered.">        } else if (&quot;MINOR_TICK_COUNT&quot;.equals(p)) {</span>
+<span class="fc bfc" id="L192" title="All 2 branches covered.">            if (tickLine != null) {</span>
+<span class="fc" id="L193">                tickLine.setMinorTickCount(Math.max(slider.getMinorTickCount(),0) + 1);</span>
+<span class="fc" id="L194">                getSkinnable().requestLayout();</span>
+            }
+<span class="pc bpc" id="L196" title="1 of 2 branches missed.">        } else if (&quot;TICK_LABEL_FORMATTER&quot;.equals(p)) {</span>
+<span class="fc bfc" id="L197" title="All 2 branches covered.">            if (tickLine != null) {</span>
+<span class="fc bfc" id="L198" title="All 2 branches covered.">                if (slider.getLabelFormatter() == null) {</span>
+<span class="fc" id="L199">                    tickLine.setTickLabelFormatter(null);</span>
+                } else {
+<span class="fc" id="L201">                    tickLine.setTickLabelFormatter(stringConverterWrapper);</span>
+<span class="fc" id="L202">                    tickLine.requestAxisLayout();</span>
+                }
+            }
+        }
+<span class="fc" id="L206">    }</span>
+
+    /**
+     * Called when ever either min, max or value changes, so thumb's layoutX, Y is recomputed.
+     */
+    private void positionThumb(final boolean animate) {
+<span class="fc" id="L212">        Slider s = getSkinnable();</span>
+<span class="pc bpc" id="L213" title="1 of 2 branches missed.">        if (s.getValue() &gt; s.getMax()) return;// this can happen if we are bound to something </span>
+<span class="fc bfc" id="L214" title="All 2 branches covered.">        boolean horizontal = s.getOrientation() == Orientation.HORIZONTAL;</span>
+<span class="fc bfc" id="L215" title="All 2 branches covered.">        final double endX = (horizontal) ? trackStart + (((trackLength * ((s.getValue() - s.getMin()) /</span>
+<span class="fc" id="L216">                (s.getMax() - s.getMin()))) - thumbWidth/2)) : thumbLeft;</span>
+<span class="fc bfc" id="L217" title="All 2 branches covered.">        final double endY = (horizontal) ? thumbTop :</span>
+<span class="fc" id="L218">            snappedTopInset() + trackLength - (trackLength * ((s.getValue() - s.getMin()) /</span>
+<span class="fc" id="L219">                (s.getMax() - s.getMin()))); //  - thumbHeight/2</span>
+        
+<span class="fc bfc" id="L221" title="All 2 branches covered.">        if (animate) {</span>
+            // lets animate the thumb transition
+<span class="fc" id="L223">            final double startX = thumb.getLayoutX();</span>
+<span class="fc" id="L224">            final double startY = thumb.getLayoutY();</span>
+<span class="fc" id="L225">            Transition transition = new Transition() {</span>
+                {
+<span class="fc" id="L227">                    setCycleDuration(Duration.millis(200));</span>
+<span class="fc" id="L228">                }</span>
+
+                @Override protected void interpolate(double frac) {
+<span class="pc bpc" id="L231" title="1 of 2 branches missed.">                    if (!Double.isNaN(startX)) {</span>
+<span class="fc" id="L232">                        thumb.setLayoutX(startX + frac * (endX - startX));</span>
+                    }
+<span class="pc bpc" id="L234" title="1 of 2 branches missed.">                    if (!Double.isNaN(startY)) {</span>
+<span class="fc" id="L235">                        thumb.setLayoutY(startY + frac * (endY - startY));</span>
+                    }
+<span class="fc" id="L237">                }</span>
+            };
+<span class="fc" id="L239">            transition.play();</span>
+<span class="fc" id="L240">        } else {</span>
+<span class="fc" id="L241">            thumb.setLayoutX(endX);</span>
+<span class="fc" id="L242">            thumb.setLayoutY(endY);</span>
+        }
+<span class="fc" id="L244">    }</span>
+
+    @Override protected void layoutChildren(final double x, final double y,
+            final double w, final double h) {
+         // calculate the available space
+        // resize thumb to preferred size
+<span class="fc" id="L250">        thumbWidth = snapSize(thumb.prefWidth(-1));</span>
+<span class="fc" id="L251">        double thumbHeight = snapSize(thumb.prefHeight(-1));</span>
+<span class="fc" id="L252">        thumb.resize(thumbWidth, thumbHeight);</span>
+        // we are assuming the is common radius's for all corners on the track
+<span class="fc bfc" id="L254" title="All 4 branches covered.">        double trackRadius = track.getBackground() == null ? 0 : track.getBackground().getFills().size() &gt; 0 ?</span>
+<span class="fc" id="L255">                track.getBackground().getFills().get(0).getRadii().getTopLeftHorizontalRadius() : 0;</span>
+
+<span class="fc bfc" id="L257" title="All 2 branches covered.">        if (getSkinnable().getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc bfc" id="L258" title="All 2 branches covered.">            double tickLineHeight =  (showTickMarks) ? tickLine.prefHeight(-1) : 0;</span>
+<span class="fc" id="L259">            double trackHeight = snapSize(track.prefHeight(-1));</span>
+<span class="fc" id="L260">            double trackAreaHeight = Math.max(trackHeight, thumbHeight);</span>
+<span class="fc bfc" id="L261" title="All 2 branches covered.">            double totalHeightNeeded = trackAreaHeight  + ((showTickMarks) ? trackToTickGap+tickLineHeight : 0);</span>
+<span class="fc" id="L262">            double startY = y + ((h - totalHeightNeeded)/2); // center slider in available height vertically</span>
+<span class="fc" id="L263">            trackLength = snapSize(w - thumbWidth);</span>
+<span class="fc" id="L264">            trackStart = snapPosition(x + (thumbWidth/2));</span>
+<span class="fc" id="L265">            double trackTop = (int)(startY + ((trackAreaHeight-trackHeight)/2));</span>
+<span class="fc" id="L266">            thumbTop = (int)(startY + ((trackAreaHeight- thumbHeight)/2));</span>
+
+<span class="fc" id="L268">            positionThumb(false);</span>
+            // layout track
+<span class="fc" id="L270">            track.resizeRelocate((int)(trackStart - trackRadius),</span>
+                                 trackTop ,
+                                 (int)(trackLength + trackRadius + trackRadius),
+                                 trackHeight);
+            // layout tick line
+<span class="fc bfc" id="L275" title="All 2 branches covered.">            if (showTickMarks) {</span>
+<span class="fc" id="L276">                tickLine.setLayoutX(trackStart);</span>
+<span class="fc" id="L277">                tickLine.setLayoutY(trackTop+trackHeight+trackToTickGap);</span>
+<span class="fc" id="L278">                tickLine.resize(trackLength, tickLineHeight);</span>
+<span class="fc" id="L279">                tickLine.requestAxisLayout();</span>
+            } else {
+<span class="fc bfc" id="L281" title="All 2 branches covered.">                if (tickLine != null) {</span>
+<span class="fc" id="L282">                    tickLine.resize(0,0);</span>
+<span class="fc" id="L283">                    tickLine.requestAxisLayout();</span>
+                }
+<span class="fc" id="L285">                tickLine = null;</span>
+            }
+<span class="fc" id="L287">        } else {</span>
+<span class="fc bfc" id="L288" title="All 2 branches covered.">            double tickLineWidth = (showTickMarks) ? tickLine.prefWidth(-1) : 0;</span>
+<span class="fc" id="L289">            double trackWidth = snapSize(track.prefWidth(-1));</span>
+<span class="fc" id="L290">            double trackAreaWidth = Math.max(trackWidth,thumbWidth);</span>
+<span class="fc bfc" id="L291" title="All 2 branches covered.">            double totalWidthNeeded = trackAreaWidth  + ((showTickMarks) ? trackToTickGap+tickLineWidth : 0) ;</span>
+<span class="fc" id="L292">            double startX = x + ((w - totalWidthNeeded)/2); // center slider in available width horizontally</span>
+<span class="fc" id="L293">            trackLength = snapSize(h - thumbHeight);</span>
+<span class="fc" id="L294">            trackStart = snapPosition(y + (thumbHeight /2));</span>
+<span class="fc" id="L295">            double trackLeft = (int)(startX + ((trackAreaWidth-trackWidth)/2));</span>
+<span class="fc" id="L296">            thumbLeft = (int)(startX + ((trackAreaWidth-thumbWidth)/2));</span>
+
+<span class="fc" id="L298">            positionThumb(false);</span>
+            // layout track
+<span class="fc" id="L300">            track.resizeRelocate(trackLeft,</span>
+                                 (int)(trackStart - trackRadius),
+                                 trackWidth,
+                                 (int)(trackLength + trackRadius + trackRadius));
+            // layout tick line
+<span class="fc bfc" id="L305" title="All 2 branches covered.">            if (showTickMarks) {</span>
+<span class="fc" id="L306">                tickLine.setLayoutX(trackLeft+trackWidth+trackToTickGap);</span>
+<span class="fc" id="L307">                tickLine.setLayoutY(trackStart);</span>
+<span class="fc" id="L308">                tickLine.resize(tickLineWidth, trackLength);</span>
+<span class="fc" id="L309">                tickLine.requestAxisLayout();</span>
+            } else {
+<span class="pc bpc" id="L311" title="1 of 2 branches missed.">                if (tickLine != null) {</span>
+<span class="nc" id="L312">                    tickLine.resize(0,0);</span>
+<span class="nc" id="L313">                    tickLine.requestAxisLayout();</span>
+                }
+<span class="fc" id="L315">                tickLine = null;</span>
+            }
+        }
+<span class="fc" id="L318">    }</span>
+
+    private double minTrackLength() {
+<span class="fc" id="L321">        return 2*thumb.prefWidth(-1);</span>
+    }
+
+    @Override protected double computeMinWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc bfc" id="L325" title="All 2 branches covered.">        if (getSkinnable().getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc" id="L326">            return (leftInset + minTrackLength() + thumb.minWidth(-1) + rightInset);</span>
+        } else {
+<span class="fc" id="L328">            return(leftInset + thumb.prefWidth(-1) + rightInset);</span>
+        }
+    }
+
+    @Override protected double computeMinHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc bfc" id="L333" title="All 2 branches covered.">         if (getSkinnable().getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc" id="L334">            return(topInset + thumb.prefHeight(-1) + bottomInset);</span>
+        } else {
+<span class="fc" id="L336">            return(topInset + minTrackLength() + thumb.prefHeight(-1) + bottomInset);</span>
+        }
+    }
+
+    @Override protected double computePrefWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc" id="L341">        final Slider s = getSkinnable();</span>
+<span class="fc bfc" id="L342" title="All 2 branches covered.">        if (s.getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc bfc" id="L343" title="All 2 branches covered.">            if(showTickMarks) {</span>
+<span class="fc" id="L344">                return Math.max(140, tickLine.prefWidth(-1));</span>
+            } else {
+<span class="fc" id="L346">                return 140;</span>
+            }
+        } else {
+<span class="fc bfc" id="L349" title="All 2 branches covered.">            return leftInset + Math.max(thumb.prefWidth(-1), track.prefWidth(-1)) +</span>
+<span class="fc" id="L350">            ((showTickMarks) ? (trackToTickGap+tickLine.prefWidth(-1)) : 0) + rightInset;</span>
+        }
+    }
+
+    @Override protected double computePrefHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc" id="L355">        final Slider s = getSkinnable();</span>
+<span class="fc bfc" id="L356" title="All 2 branches covered.">        if (s.getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc bfc" id="L357" title="All 2 branches covered.">            return topInset + Math.max(thumb.prefHeight(-1), track.prefHeight(-1)) +</span>
+<span class="fc" id="L358">             ((showTickMarks) ? (trackToTickGap+tickLine.prefHeight(-1)) : 0)  + bottomInset;</span>
+        } else {
+<span class="fc bfc" id="L360" title="All 2 branches covered.">            if(showTickMarks) {</span>
+<span class="fc" id="L361">                return Math.max(140, tickLine.prefHeight(-1));</span>
+            } else {
+<span class="fc" id="L363">                return 140;</span>
+            }
+        }
+    }
+
+    @Override protected double computeMaxWidth(double height, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc bfc" id="L369" title="All 2 branches covered.">        if (getSkinnable().getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc" id="L370">            return Double.MAX_VALUE;</span>
+        } else {
+<span class="fc" id="L372">            return getSkinnable().prefWidth(-1);</span>
+        }
+    }
+
+    @Override protected double computeMaxHeight(double width, double topInset, double rightInset, double bottomInset, double leftInset) {
+<span class="fc bfc" id="L377" title="All 2 branches covered.">        if (getSkinnable().getOrientation() == Orientation.HORIZONTAL) {</span>
+<span class="fc" id="L378">            return getSkinnable().prefHeight(width);</span>
+        } else {
+<span class="fc" id="L380">            return Double.MAX_VALUE;</span>
+        }
+    }
+    
+<span class="fc" id="L384">    private Animation thumbPressAnimation = new Transition() {</span>
+        {
+<span class="fc" id="L386">            setCycleDuration(Duration.millis(100));</span>
+<span class="fc" id="L387">        }</span>
+        protected void interpolate(double frac) {
+<span class="fc" id="L389">        	double padding = 10 + frac * 5;</span>
+<span class="fc" id="L390">        	thumb.setStyle(&quot;-fx-padding: &quot; + padding + &quot;;&quot;);</span>
+<span class="fc" id="L391">        }</span>
+    };
+    
+<span class="fc" id="L394">    private Animation thumbReleaseAnimation = new Transition() {</span>
+        {
+<span class="fc" id="L396">            setCycleDuration(Duration.millis(100));</span>
+<span class="fc" id="L397">        }</span>
+        protected void interpolate(double frac) {
+<span class="fc" id="L399">        	double padding = 15 - frac * 5;</span>
+<span class="fc" id="L400">        	thumb.setStyle(&quot;-fx-padding: &quot; + padding + &quot;;&quot;);</span>
+<span class="fc" id="L401">        }</span>
+    };
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

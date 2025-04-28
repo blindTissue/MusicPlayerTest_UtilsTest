@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Search.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.util</a> &gt; <span class="el_source">Search.java</span></div><h1>Search.java</h1><pre class="source lang-java linenums">package app.musicplayer.util;
+
+import app.musicplayer.model.Library;
+import app.musicplayer.model.Song;
+import app.musicplayer.model.Album;
+import app.musicplayer.model.Artist;
+import app.musicplayer.model.SearchResult;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+
+<span class="nc" id="L14">public class Search {</span>
+
+<span class="fc" id="L16">    private static BooleanProperty hasResults = new SimpleBooleanProperty(false);</span>
+    private static SearchResult result;
+    private static Thread searchThread;
+
+<span class="fc" id="L20">    public static BooleanProperty hasResultsProperty() { return hasResults; }</span>
+
+    public static SearchResult getResult() {
+<span class="fc" id="L23">        hasResults.set(false);</span>
+<span class="fc" id="L24">        return result;</span>
+    }
+
+    public static void search(String searchText) {
+<span class="pc bpc" id="L28" title="1 of 4 branches missed.">        if (searchThread != null &amp;&amp; searchThread.isAlive()) {</span>
+<span class="nc" id="L29">            searchThread.interrupt();</span>
+        }
+
+<span class="fc" id="L32">        String text = searchText.toUpperCase();</span>
+
+<span class="fc" id="L34">        searchThread = new Thread(() -&gt; {</span>
+            try {
+
+<span class="fc" id="L37">                hasResults.set(false);</span>
+
+<span class="fc" id="L39">                List&lt;Song&gt; songResults = Library.getSongs().stream()</span>
+<span class="fc" id="L40">                        .filter(song -&gt; song.getTitle().toUpperCase().contains(text))</span>
+<span class="fc" id="L41">                        .sorted((x, y) -&gt; {</span>
+<span class="fc" id="L42">                            boolean xMatch = x.getTitle().toUpperCase().equals(text);</span>
+<span class="fc" id="L43">                            boolean yMatch = y.getTitle().toUpperCase().equals(text);</span>
+<span class="fc bfc" id="L44" title="All 4 branches covered.">                            if (xMatch &amp;&amp; yMatch) return 0;</span>
+<span class="fc bfc" id="L45" title="All 2 branches covered.">                            if (xMatch) return -1;</span>
+<span class="fc bfc" id="L46" title="All 2 branches covered.">                            if (yMatch) return 1;</span>
+
+<span class="fc" id="L48">                            boolean xStartWith = x.getTitle().toUpperCase().startsWith(text);</span>
+<span class="fc" id="L49">                            boolean yStartWith = y.getTitle().toUpperCase().startsWith(text);</span>
+<span class="fc bfc" id="L50" title="All 4 branches covered.">                            if (xStartWith &amp;&amp; yStartWith) return 0;</span>
+<span class="fc bfc" id="L51" title="All 2 branches covered.">                            if (xStartWith) return -1;</span>
+<span class="fc bfc" id="L52" title="All 2 branches covered.">                            if (yStartWith) return 1;</span>
+
+<span class="fc" id="L54">                            boolean xContains = x.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc" id="L55">                            boolean yContains = y.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc bfc" id="L56" title="All 4 branches covered.">                            if (xContains &amp;&amp; yContains) return 0;</span>
+<span class="fc bfc" id="L57" title="All 2 branches covered.">                            if (xContains) return -1;</span>
+<span class="fc bfc" id="L58" title="All 2 branches covered.">                            if (yContains) return 1;</span>
+<span class="fc" id="L59">                            return 0;</span>
+                        })
+<span class="fc" id="L61">                        .collect(Collectors.toList());</span>
+
+<span class="fc bfc" id="L63" title="All 2 branches covered.">                if (searchThread.isInterrupted()) { throw new InterruptedException(); }</span>
+
+<span class="fc" id="L65">                List&lt;Album&gt; albumResults = Library.getAlbums().stream()</span>
+<span class="fc" id="L66">                        .filter(album -&gt; album.getTitle().toUpperCase().contains(text))</span>
+<span class="fc" id="L67">                        .sorted((x, y) -&gt; {</span>
+<span class="fc" id="L68">                            boolean xEqual = x.getTitle().toUpperCase().equals(text);</span>
+<span class="fc" id="L69">                            boolean yEqual = y.getTitle().toUpperCase().equals(text);</span>
+<span class="pc bpc" id="L70" title="1 of 4 branches missed.">                            if (xEqual &amp;&amp; yEqual) return 0;</span>
+<span class="fc bfc" id="L71" title="All 2 branches covered.">                            if (xEqual) return -1;</span>
+<span class="fc bfc" id="L72" title="All 2 branches covered.">                            if (yEqual) return 1;</span>
+
+<span class="fc" id="L74">                            boolean xStartWith = x.getTitle().toUpperCase().startsWith(text);</span>
+<span class="fc" id="L75">                            boolean yStartWith = y.getTitle().toUpperCase().startsWith(text);</span>
+<span class="fc bfc" id="L76" title="All 4 branches covered.">                            if (xStartWith &amp;&amp; yStartWith) return 0;</span>
+<span class="fc bfc" id="L77" title="All 2 branches covered.">                            if (xStartWith) return -1;</span>
+<span class="pc bpc" id="L78" title="1 of 2 branches missed.">                            if (yStartWith) return 1;</span>
+
+<span class="fc" id="L80">                            boolean xContains = x.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc" id="L81">                            boolean yContains = y.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc bfc" id="L82" title="All 4 branches covered.">                            if (xContains &amp;&amp; yContains) return 0;</span>
+<span class="fc bfc" id="L83" title="All 2 branches covered.">                            if (xContains) return -1;</span>
+<span class="fc bfc" id="L84" title="All 2 branches covered.">                            if (yContains) return 1;</span>
+<span class="fc" id="L85">                            return 0;</span>
+                        })
+<span class="fc" id="L87">                        .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L89" title="1 of 2 branches missed.">                if (searchThread.isInterrupted()) { throw new InterruptedException(); }</span>
+
+<span class="fc" id="L91">                List&lt;Artist&gt; artistResults = Library.getArtists().stream()</span>
+<span class="fc" id="L92">                        .filter(artist -&gt; artist.getTitle().toUpperCase().contains(text))</span>
+<span class="fc" id="L93">                        .sorted((x, y) -&gt; {</span>
+<span class="fc" id="L94">                            boolean xMatch = x.getTitle().toUpperCase().equals(text);</span>
+<span class="fc" id="L95">                            boolean yMatch = y.getTitle().toUpperCase().equals(text);</span>
+<span class="pc bpc" id="L96" title="1 of 4 branches missed.">                            if (xMatch &amp;&amp; yMatch) return 0;</span>
+<span class="fc bfc" id="L97" title="All 2 branches covered.">                            if (xMatch) return -1;</span>
+<span class="fc bfc" id="L98" title="All 2 branches covered.">                            if (yMatch) return 1;</span>
+
+<span class="fc" id="L100">                            boolean xStartWith = x.getTitle().toUpperCase().startsWith(text);</span>
+<span class="fc" id="L101">                            boolean yStartWith = y.getTitle().toUpperCase().startsWith(text);</span>
+
+<span class="fc bfc" id="L103" title="All 4 branches covered.">                            if (xStartWith &amp;&amp; yStartWith) return 0;</span>
+<span class="fc bfc" id="L104" title="All 2 branches covered.">                            if (xStartWith) return -1;</span>
+<span class="pc bpc" id="L105" title="1 of 2 branches missed.">                            if (yStartWith) return 1;</span>
+
+<span class="fc" id="L107">                            boolean xContains = x.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc" id="L108">                            boolean yContains = y.getTitle().toUpperCase().contains(&quot; &quot; + text);</span>
+<span class="fc bfc" id="L109" title="All 4 branches covered.">                            if (xContains &amp;&amp; yContains) return 0;</span>
+<span class="fc bfc" id="L110" title="All 2 branches covered.">                            if (xContains) return -1;</span>
+<span class="fc bfc" id="L111" title="All 2 branches covered.">                            if (yContains) return 1;</span>
+<span class="fc" id="L112">                            return 0;</span>
+                        })
+<span class="fc" id="L114">                        .collect(Collectors.toList());</span>
+
+<span class="pc bpc" id="L116" title="1 of 2 branches missed.">                if (searchThread.isInterrupted()) { throw new InterruptedException(); }</span>
+
+<span class="fc bfc" id="L118" title="All 2 branches covered.">                if (songResults.size() &gt; 3) songResults = songResults.subList(0, 3);</span>
+<span class="fc bfc" id="L119" title="All 2 branches covered.">                if (albumResults.size() &gt; 3) albumResults = albumResults.subList(0, 3);</span>
+<span class="fc bfc" id="L120" title="All 2 branches covered.">                if (artistResults.size() &gt; 3) artistResults = artistResults.subList(0, 3);</span>
+<span class="fc" id="L121">                result = new SearchResult(songResults, albumResults, artistResults);</span>
+
+<span class="fc" id="L123">                hasResults.set(true);</span>
+
+<span class="fc" id="L125">            } catch (InterruptedException ex) {</span>
+                // terminate thread
+<span class="fc" id="L127">            }</span>
+<span class="fc" id="L128">        });</span>
+<span class="fc" id="L129">        searchThread.start();</span>
+<span class="fc" id="L130">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

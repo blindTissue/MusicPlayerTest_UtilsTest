@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ImportMusicDialogController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">ImportMusicDialogController.java</span></div><h1>ImportMusicDialogController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import app.musicplayer.model.Library;
+import app.musicplayer.util.ImportMusicTask;
+import javafx.fxml.FXML;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.stage.DirectoryChooser;
+import javafx.stage.Stage;
+
+/**
+ * Dialog to import music library.
+ *
+ */
+<span class="nc" id="L16">public class ImportMusicDialogController {</span>
+	@FXML private Label label;
+	@FXML private Button importMusicButton;
+	@FXML private ProgressBar progressBar;
+	
+	private Stage dialogStage;
+<span class="nc" id="L22">	private boolean musicImported = false;</span>
+
+	/**
+	 * Sets the stage of this dialog.
+	 * 
+	 * @param dialogStage
+	 */
+	public void setDialogStage(Stage dialogStage) {
+<span class="nc" id="L30">		this.dialogStage = dialogStage;</span>
+<span class="nc" id="L31">	}</span>
+	
+	/**
+	 * Returns true if the music library was imported successfully, false otherwise.
+	 * 
+	 * @return
+	 */
+	public boolean isMusicImported() {
+<span class="nc" id="L39">		return musicImported;</span>
+	}
+	
+	@FXML
+	private void handleImport() {
+		try {
+<span class="nc" id="L45">			DirectoryChooser directoryChooser = new DirectoryChooser();</span>
+		    // Show file explorer.
+<span class="nc" id="L47">		    String musicDirectory = directoryChooser.showDialog(dialogStage).getPath();</span>
+		    
+		    // Creates a task that is used to import the music library.
+<span class="nc" id="L50">	        ImportMusicTask&lt;Boolean&gt; task = new ImportMusicTask&lt;Boolean&gt;() {</span>
+	        	@Override protected Boolean call() throws Exception {
+			        // Creates library.xml file from user music library.
+				    try {
+<span class="nc" id="L54">						Library.importMusic(musicDirectory, this);</span>
+<span class="nc" id="L55">						return true;</span>
+<span class="nc" id="L56">					} catch (Exception e) {</span>
+<span class="nc" id="L57">						e.printStackTrace();</span>
+<span class="nc" id="L58">						return false;</span>
+					}
+	        	}
+	        };
+	        
+	        // When the task (music importing) ends, the dialog is closed.
+<span class="nc" id="L64">	        task.setOnSucceeded((x) -&gt; {</span>
+			    // Sets the music as imported successfully and closes the dialog.
+<span class="nc" id="L66">			    musicImported = true;</span>
+<span class="nc" id="L67">			    dialogStage.close();</span>
+<span class="nc" id="L68">	        });</span>
+	        
+<span class="nc" id="L70">	        task.updateProgress(0, 1);</span>
+	        
+	        // Retrieves the task progress and adds that to the progress bar.
+<span class="nc" id="L73">	        progressBar.progressProperty().bind(task.progressProperty());</span>
+	        
+	        // Creates a new thread with the import music task and runs it.
+<span class="nc" id="L76">	        Thread thread = new Thread(task);</span>
+<span class="nc" id="L77">	        thread.start();</span>
+        	
+<span class="nc" id="L79">	        label.setText(&quot;Importing music library...&quot;);</span>
+	        // Makes the import music button invisible and the progress bar visible.
+	        // This happens as soon as the music import task is started.
+<span class="nc" id="L82">        	importMusicButton.setVisible(false);</span>
+<span class="nc" id="L83">		    progressBar.setVisible(true);</span>
+<span class="nc" id="L84">		} catch (Exception e) {</span>
+<span class="nc" id="L85">			e.printStackTrace();</span>
+<span class="nc" id="L86">		}</span>
+<span class="nc" id="L87">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

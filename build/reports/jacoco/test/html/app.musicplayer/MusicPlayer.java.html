@@ -1,0 +1,668 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>MusicPlayer.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer</a> &gt; <span class="el_source">MusicPlayer.java</span></div><h1>MusicPlayer.java</h1><pre class="source lang-java linenums">package app.musicplayer;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.LogManager;
+
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+
+import app.musicplayer.model.Album;
+import app.musicplayer.model.Artist;
+import app.musicplayer.model.Library;
+import app.musicplayer.model.Song;
+import app.musicplayer.util.Resources;
+import app.musicplayer.util.XMLEditor;
+import app.musicplayer.view.ImportMusicDialogController;
+import app.musicplayer.view.MainController;
+import app.musicplayer.view.NowPlayingController;
+import javafx.application.Application;
+import javafx.application.Platform;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Scene;
+import javafx.scene.image.Image;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import javafx.stage.StageStyle;
+import javafx.util.Duration;
+
+<span class="nc" id="L44">public class MusicPlayer extends Application {</span>
+
+    private static MainController mainController;
+    private static MediaPlayer mediaPlayer;
+    private static ArrayList&lt;Song&gt; nowPlayingList;
+    private static int nowPlayingIndex;
+    private static Song nowPlaying;
+    private static Timer timer;
+    private static int timerCounter;
+    private static int secondsPlayed;
+<span class="fc" id="L54">    private static boolean isLoopActive = false;</span>
+<span class="fc" id="L55">    private static boolean isShuffleActive = false;</span>
+<span class="fc" id="L56">    private static boolean isMuted = false;</span>
+    private static Object draggedItem;
+
+    private static Stage stage;
+
+    // Stores the number of files in library.xml.
+    // This will then be compared to the number of files in the music directory when starting up the application to
+    // determine if the xml file needs to be updated by adding or deleting songs.
+    private static int xmlFileNum;
+
+    // Stores the last id that was assigned to a song.
+    // This is important when adding new songs after others have been deleted because the last id assigned
+    // may not necessarily be equal to the number of songs in the xml file if songs have been deleted.
+    private static int lastIdAssigned;
+
+    public static void main(String[] args) {
+<span class="nc" id="L72">        Application.launch(MusicPlayer.class);</span>
+<span class="nc" id="L73">    }</span>
+
+    @Override
+    public void start(Stage stage) throws Exception {
+
+        // Suppresses warning caused by converting music library data into xml file.
+<span class="nc" id="L79">        LogManager.getLogManager().reset();</span>
+<span class="nc" id="L80">        PrintStream dummyStream = new PrintStream(new OutputStream() {</span>
+            public void write(int b) {
+                //do nothing
+<span class="nc" id="L83">            }</span>
+        });
+<span class="nc" id="L85">        System.setOut(dummyStream);</span>
+<span class="nc" id="L86">        System.setErr(dummyStream);</span>
+
+<span class="nc" id="L88">        timer = new Timer();</span>
+<span class="nc" id="L89">        timerCounter = 0;</span>
+<span class="nc" id="L90">        secondsPlayed = 0;</span>
+
+<span class="nc" id="L92">        MusicPlayer.stage = stage;</span>
+<span class="nc" id="L93">        MusicPlayer.stage.setTitle(&quot;Music Player&quot;);</span>
+<span class="nc" id="L94">        MusicPlayer.stage.getIcons().add(new Image(this.getClass().getResource(Resources.IMG + &quot;Icon.png&quot;).toString()));</span>
+<span class="nc" id="L95">        MusicPlayer.stage.setOnCloseRequest(event -&gt; {</span>
+<span class="nc" id="L96">            Platform.exit();</span>
+<span class="nc" id="L97">            System.exit(0);</span>
+<span class="nc" id="L98">        });</span>
+
+        try {
+            // Load main layout from fxml file.
+<span class="nc" id="L102">            FXMLLoader loader = new FXMLLoader(this.getClass().getResource(Resources.FXML + &quot;SplashScreen.fxml&quot;));</span>
+<span class="nc" id="L103">            VBox view = loader.load();</span>
+
+            // Shows the scene containing the layout.
+<span class="nc" id="L106">            Scene scene = new Scene(view);</span>
+<span class="nc" id="L107">            stage.setScene(scene);</span>
+<span class="nc" id="L108">            stage.setMaximized(true);</span>
+<span class="nc" id="L109">            stage.show();</span>
+
+            // Calls the function to check in the library.xml file exists. If it does not, the file is created.
+<span class="nc" id="L112">            checkLibraryXML();</span>
+<span class="nc" id="L113">        } catch (Exception ex) {</span>
+<span class="nc" id="L114">            ex.printStackTrace();</span>
+<span class="nc" id="L115">            System.exit(0);</span>
+<span class="nc" id="L116">        }</span>
+
+<span class="nc" id="L118">        Thread thread = new Thread(() -&gt; {</span>
+            // Retrieves song, album, artist, and playlist data from library.
+<span class="nc" id="L120">            Library.getSongs();</span>
+<span class="nc" id="L121">            Library.getAlbums();</span>
+<span class="nc" id="L122">            Library.getArtists();</span>
+<span class="nc" id="L123">            Library.getPlaylists();</span>
+
+<span class="nc" id="L125">            nowPlayingList = Library.loadPlayingList();</span>
+
+<span class="nc bnc" id="L127" title="All 2 branches missed.">            if (nowPlayingList.isEmpty()) {</span>
+
+<span class="nc" id="L129">                Artist artist = Library.getArtists().get(0);</span>
+
+<span class="nc bnc" id="L131" title="All 2 branches missed.">                for (Album album : artist.getAlbums()) {</span>
+<span class="nc" id="L132">                    nowPlayingList.addAll(album.getSongs());</span>
+<span class="nc" id="L133">                }</span>
+
+<span class="nc" id="L135">                Collections.sort(nowPlayingList, (first, second) -&gt; {</span>
+<span class="nc" id="L136">                    Album firstAlbum = Library.getAlbum(first.getAlbum());</span>
+<span class="nc" id="L137">                    Album secondAlbum = Library.getAlbum(second.getAlbum());</span>
+<span class="nc bnc" id="L138" title="All 2 branches missed.">                    if (firstAlbum.compareTo(secondAlbum) != 0) {</span>
+<span class="nc" id="L139">                        return firstAlbum.compareTo(secondAlbum);</span>
+                    } else {
+<span class="nc" id="L141">                        return first.compareTo(second);</span>
+                    }
+                });
+            }
+
+<span class="nc" id="L146">            nowPlaying = nowPlayingList.get(0);</span>
+<span class="nc" id="L147">            nowPlayingIndex = 0;</span>
+<span class="nc" id="L148">            nowPlaying.setPlaying(true);</span>
+<span class="nc" id="L149">            timer = new Timer();</span>
+<span class="nc" id="L150">            timerCounter = 0;</span>
+<span class="nc" id="L151">            secondsPlayed = 0;</span>
+<span class="nc" id="L152">            String path = nowPlaying.getLocation();</span>
+<span class="nc" id="L153">            Media media = new Media(Paths.get(path).toUri().toString());</span>
+<span class="nc" id="L154">            mediaPlayer = new MediaPlayer(media);</span>
+<span class="nc" id="L155">            mediaPlayer.setVolume(0.5);</span>
+<span class="nc" id="L156">            mediaPlayer.setOnEndOfMedia(new SongSkipper());</span>
+
+<span class="nc" id="L158">            File imgFolder = new File(Resources.JAR + &quot;/img&quot;);</span>
+<span class="nc bnc" id="L159" title="All 2 branches missed.">            if (!imgFolder.exists()) {</span>
+
+<span class="nc" id="L161">                Thread thread1 = new Thread(() -&gt; {</span>
+<span class="nc" id="L162">                    Library.getArtists().forEach(Artist::downloadArtistImage);</span>
+<span class="nc" id="L163">                });</span>
+
+<span class="nc" id="L165">                Thread thread2 = new Thread(() -&gt; {</span>
+<span class="nc" id="L166">                    Library.getAlbums().forEach(Album::downloadArtwork);</span>
+<span class="nc" id="L167">                });</span>
+
+<span class="nc" id="L169">                thread1.start();</span>
+<span class="nc" id="L170">                thread2.start();</span>
+            }
+
+<span class="nc" id="L173">            new Thread(() -&gt; {</span>
+<span class="nc" id="L174">                XMLEditor.getNewSongs().forEach(song -&gt; {</span>
+                    try {
+<span class="nc" id="L176">                        Library.getArtist(song.getArtist()).downloadArtistImage();</span>
+<span class="nc" id="L177">                    } catch (Exception ex) {</span>
+<span class="nc" id="L178">                        ex.printStackTrace();</span>
+<span class="nc" id="L179">                    }</span>
+<span class="nc" id="L180">                });</span>
+<span class="nc" id="L181">            }).start();</span>
+
+            // Calls the function to initialize the main layout.
+<span class="nc" id="L184">            Platform.runLater(this::initMain);</span>
+<span class="nc" id="L185">        });</span>
+
+<span class="nc" id="L187">        thread.start();</span>
+<span class="nc" id="L188">    }</span>
+
+    private static void checkLibraryXML() {
+        // Finds the jar file and the path of its parent folder.
+<span class="nc" id="L192">        File musicPlayerJAR = null;</span>
+        try {
+<span class="nc" id="L194">            musicPlayerJAR = new File(MusicPlayer.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath());</span>
+<span class="nc" id="L195">        } catch (URISyntaxException e) {</span>
+<span class="nc" id="L196">            e.printStackTrace();</span>
+<span class="nc" id="L197">        }</span>
+<span class="nc" id="L198">        String jarFilePath = musicPlayerJAR.getParentFile().getPath();</span>
+
+        // Assigns the filepath to the XML filepath set in Resources.java
+<span class="nc" id="L201">        Resources.JAR = jarFilePath + &quot;/&quot;;</span>
+
+        // Specifies library.xml file and its location.
+<span class="nc" id="L204">        File libraryXML = new File(Resources.JAR + &quot;library.xml&quot;);</span>
+
+        // If the file exists, check if the music directory has changed.
+        Path musicDirectory;
+<span class="nc bnc" id="L208" title="All 2 branches missed.">        if (libraryXML.exists()) {</span>
+            // Gets music directory path from xml file so that the number of files in the
+            // music directory can be counted and compared to the data in the xml file.
+            // It is then passed as an argument when creating the directory watch.
+<span class="nc" id="L212">            musicDirectory = xmlMusicDirPathFinder();</span>
+
+            // Try/catch block to deal with case where music directory has been renamed.
+            try {
+                // Gets the number of files in the music directory and the number of files saved in the xml file.
+                // These values will be compared to determine if the xml file needs to be updated.
+<span class="nc" id="L218">                int musicDirFileNum = musicDirFileNumFinder(musicDirectory.toFile(), 0);</span>
+<span class="nc" id="L219">                xmlFileNum = xmlMusicDirFileNumFinder();</span>
+
+                // If the number of files stored in the xml file is not the same as the number of files in the music directory.
+                // Music library has changed; update the xml file.
+<span class="nc bnc" id="L223" title="All 2 branches missed.">                if (musicDirFileNum != xmlFileNum) {</span>
+                    // Updates the xml file from the saved music directory.
+<span class="nc" id="L225">                    updateLibraryXML(musicDirectory);</span>
+                }
+                // NullPointerException thrown by musicDirFileNumFinder().
+                // It occurs if the music directory has been renamed
+<span class="nc" id="L229">            } catch (NullPointerException npe) {</span>
+<span class="nc" id="L230">                createLibraryXML();</span>
+                // Gets the number of files saved in the xml file.
+<span class="nc" id="L232">                xmlFileNum = xmlMusicDirFileNumFinder();</span>
+                // Gets music directory path from xml file so that it can be passed as an argument when creating the directory watch.
+<span class="nc" id="L234">                musicDirectory = xmlMusicDirPathFinder();</span>
+<span class="nc" id="L235">            }</span>
+
+            // If the library.xml file does not exist, the file is created from the user specified music library location.
+<span class="nc bnc" id="L238" title="All 2 branches missed.">        } else if (!libraryXML.exists()) {</span>
+<span class="nc" id="L239">            createLibraryXML();</span>
+            // Gets the number of files saved in the xml file.
+<span class="nc" id="L241">            xmlFileNum = xmlMusicDirFileNumFinder();</span>
+            // Gets music directory path from xml file so that it can be passed as an argument when creating the directory watch.
+<span class="nc" id="L243">            musicDirectory = xmlMusicDirPathFinder();</span>
+        }
+<span class="nc" id="L245">    }</span>
+
+    private static Path xmlMusicDirPathFinder() {
+        try {
+            // Creates reader for xml file.
+<span class="nc" id="L250">            XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L251">            factory.setProperty(&quot;javax.xml.stream.isCoalescing&quot;, true);</span>
+<span class="nc" id="L252">            FileInputStream is = new FileInputStream(new File(Resources.JAR + &quot;library.xml&quot;));</span>
+<span class="nc" id="L253">            XMLStreamReader reader = factory.createXMLStreamReader(is, &quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L255">            String element = null;</span>
+<span class="nc" id="L256">            String path = null;</span>
+
+            // Loops through xml file looking for the music directory file path.
+<span class="nc bnc" id="L259" title="All 2 branches missed.">            while(reader.hasNext()) {</span>
+<span class="nc" id="L260">                reader.next();</span>
+<span class="nc bnc" id="L261" title="All 2 branches missed.">                if (reader.isWhiteSpace()) {</span>
+<span class="nc" id="L262">                    continue;</span>
+<span class="nc bnc" id="L263" title="All 2 branches missed.">                } else if (reader.isStartElement()) {</span>
+<span class="nc" id="L264">                    element = reader.getName().getLocalPart();</span>
+<span class="nc bnc" id="L265" title="All 4 branches missed.">                } else if (reader.isCharacters() &amp;&amp; element.equals(&quot;path&quot;)) {</span>
+<span class="nc" id="L266">                    path = reader.getText();</span>
+<span class="nc" id="L267">                    break;</span>
+                }
+            }
+            // Closes xml reader.
+<span class="nc" id="L271">            reader.close();</span>
+
+<span class="nc" id="L273">            return Paths.get(path);</span>
+<span class="nc" id="L274">        } catch (Exception e) {</span>
+<span class="nc" id="L275">            e.printStackTrace();</span>
+<span class="nc" id="L276">            return null;</span>
+        }
+    }
+
+    private static int xmlMusicDirFileNumFinder() {
+        try {
+            // Creates reader for xml file.
+<span class="nc" id="L283">            XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L284">            factory.setProperty(&quot;javax.xml.stream.isCoalescing&quot;, true);</span>
+<span class="nc" id="L285">            FileInputStream is = new FileInputStream(new File(Resources.JAR + &quot;library.xml&quot;));</span>
+<span class="nc" id="L286">            XMLStreamReader reader = factory.createXMLStreamReader(is, &quot;UTF-8&quot;);</span>
+
+<span class="nc" id="L288">            String element = null;</span>
+<span class="nc" id="L289">            String fileNum = null;</span>
+
+            // Loops through xml file looking for the music directory file path.
+<span class="nc bnc" id="L292" title="All 2 branches missed.">            while(reader.hasNext()) {</span>
+<span class="nc" id="L293">                reader.next();</span>
+<span class="nc bnc" id="L294" title="All 2 branches missed.">                if (reader.isWhiteSpace()) {</span>
+<span class="nc" id="L295">                    continue;</span>
+<span class="nc bnc" id="L296" title="All 2 branches missed.">                } else if (reader.isStartElement()) {</span>
+<span class="nc" id="L297">                    element = reader.getName().getLocalPart();</span>
+<span class="nc bnc" id="L298" title="All 4 branches missed.">                } else if (reader.isCharacters() &amp;&amp; element.equals(&quot;fileNum&quot;)) {</span>
+<span class="nc" id="L299">                    fileNum = reader.getText();</span>
+<span class="nc" id="L300">                    break;</span>
+                }
+            }
+            // Closes xml reader.
+<span class="nc" id="L304">            reader.close();</span>
+
+            // Converts the file number to an int and returns the value.
+<span class="nc" id="L307">            return Integer.parseInt(fileNum);</span>
+<span class="nc" id="L308">        } catch (Exception e) {</span>
+<span class="nc" id="L309">            e.printStackTrace();</span>
+<span class="nc" id="L310">            return 0;</span>
+        }
+    }
+
+    private static int musicDirFileNumFinder(File musicDirectory, int i) {
+        // Lists all the files in the music directory and stores them in an array.
+<span class="nc" id="L316">        File[] files = musicDirectory.listFiles();</span>
+
+        // Loops through the files, increments counter if file is found.
+<span class="nc bnc" id="L319" title="All 2 branches missed.">        for (File file : files) {</span>
+<span class="nc bnc" id="L320" title="All 4 branches missed.">            if (file.isFile() &amp;&amp; Library.isSupportedFileType(file.getName())) {</span>
+<span class="nc" id="L321">                i++;</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">            } else if (file.isDirectory()) {</span>
+<span class="nc" id="L323">                i = musicDirFileNumFinder(file, i);</span>
+            }
+        }
+<span class="nc" id="L326">        return i;</span>
+    }
+
+    private static void updateLibraryXML(Path musicDirectory) {
+        // Sets the music directory for the XMLEditor.
+<span class="nc" id="L331">        XMLEditor.setMusicDirectory(musicDirectory);</span>
+
+        // Checks if songs have to be added, deleted, or both to the xml file and
+        // performs the corresponding operation.
+<span class="nc" id="L335">        XMLEditor.addDeleteChecker();</span>
+<span class="nc" id="L336">    }</span>
+
+    private static void createLibraryXML() {
+        try {
+<span class="nc" id="L340">            FXMLLoader loader = new FXMLLoader(MusicPlayer.class.getResource(Resources.FXML + &quot;ImportMusicDialog.fxml&quot;));</span>
+<span class="nc" id="L341">            BorderPane importView = loader.load();</span>
+
+            // Create the dialog Stage.
+<span class="nc" id="L344">            Stage dialogStage = new Stage();</span>
+<span class="nc" id="L345">            dialogStage.setTitle(&quot;Music Player Configuration&quot;);</span>
+            // Forces user to focus on dialog.
+<span class="nc" id="L347">            dialogStage.initModality(Modality.WINDOW_MODAL);</span>
+            // Sets minimal decorations for dialog.
+<span class="nc" id="L349">            dialogStage.initStyle(StageStyle.UTILITY);</span>
+            // Prevents the alert from being re-sizable.
+<span class="nc" id="L351">            dialogStage.setResizable(false);</span>
+<span class="nc" id="L352">            dialogStage.initOwner(stage);</span>
+
+            // Sets the import music dialog scene in the stage.
+<span class="nc" id="L355">            dialogStage.setScene(new Scene(importView));</span>
+
+            // Set the dialog into the controller.
+<span class="nc" id="L358">            ImportMusicDialogController controller = loader.getController();</span>
+<span class="nc" id="L359">            controller.setDialogStage(dialogStage);</span>
+
+            // Show the dialog and wait until the user closes it.
+<span class="nc" id="L362">            dialogStage.showAndWait();</span>
+
+            // Checks if the music was imported successfully. Closes the application otherwise.
+<span class="nc" id="L365">            boolean musicImported = controller.isMusicImported();</span>
+<span class="nc bnc" id="L366" title="All 2 branches missed.">            if (!musicImported) {</span>
+<span class="nc" id="L367">                System.exit(0);</span>
+            }
+<span class="nc" id="L369">        } catch (IOException e) {</span>
+<span class="nc" id="L370">            e.printStackTrace();</span>
+<span class="nc" id="L371">        }</span>
+<span class="nc" id="L372">    }</span>
+
+    /**
+     * Initializes the main layout.
+     */
+    private void initMain() {
+        try {
+            // Load main layout from fxml file.
+<span class="nc" id="L380">            FXMLLoader loader = new FXMLLoader(this.getClass().getResource(Resources.FXML + &quot;Main.fxml&quot;));</span>
+<span class="nc" id="L381">            BorderPane view = loader.load();</span>
+
+            // Shows the scene containing the layout.
+<span class="nc" id="L384">            double width = stage.getScene().getWidth();</span>
+<span class="nc" id="L385">            double height = stage.getScene().getHeight();</span>
+
+<span class="nc" id="L387">            view.setPrefWidth(width);</span>
+<span class="nc" id="L388">            view.setPrefHeight(height);</span>
+
+<span class="nc" id="L390">            Scene scene = new Scene(view);</span>
+<span class="nc" id="L391">            stage.setScene(scene);</span>
+
+            // Gives the controller access to the music player main application.
+<span class="nc" id="L394">            mainController = loader.getController();</span>
+<span class="nc" id="L395">            mediaPlayer.volumeProperty().bind(mainController.getVolumeSlider().valueProperty().divide(200));</span>
+
+<span class="nc" id="L397">        } catch (Exception ex) {</span>
+<span class="nc" id="L398">            ex.printStackTrace();</span>
+<span class="nc" id="L399">        }</span>
+<span class="nc" id="L400">    }</span>
+
+    private static class SongSkipper implements Runnable {
+        @Override
+        public void run() {
+<span class="nc" id="L405">            skip();</span>
+<span class="nc" id="L406">        }</span>
+    }
+
+<span class="nc" id="L409">    private static class TimeUpdater extends TimerTask {</span>
+<span class="nc" id="L410">        private int length = (int) getNowPlaying().getLengthInSeconds() * 4;</span>
+
+        @Override
+        public void run() {
+<span class="nc" id="L414">            Platform.runLater(() -&gt; {</span>
+<span class="nc bnc" id="L415" title="All 2 branches missed.">                if (timerCounter &lt; length) {</span>
+<span class="nc bnc" id="L416" title="All 2 branches missed.">                    if (++timerCounter % 4 == 0) {</span>
+<span class="nc" id="L417">                        mainController.updateTimeLabels();</span>
+<span class="nc" id="L418">                        secondsPlayed++;</span>
+                    }
+<span class="nc bnc" id="L420" title="All 2 branches missed.">                    if (!mainController.isTimeSliderPressed()) {</span>
+<span class="nc" id="L421">                        mainController.updateTimeSlider();</span>
+                    }
+                }
+<span class="nc" id="L424">            });</span>
+<span class="nc" id="L425">        }</span>
+    }
+
+    /**
+     * Plays selected song.
+     */
+    public static void play() {
+<span class="nc bnc" id="L432" title="All 4 branches missed.">        if (mediaPlayer != null &amp;&amp; !isPlaying()) {</span>
+<span class="nc" id="L433">            mediaPlayer.play();</span>
+<span class="nc" id="L434">            timer.scheduleAtFixedRate(new TimeUpdater(), 0, 250);</span>
+<span class="nc" id="L435">            mainController.updatePlayPauseIcon(true);</span>
+        }
+<span class="nc" id="L437">    }</span>
+
+    /**
+     * Checks if a song is playing.
+     */
+    public static boolean isPlaying() {
+<span class="nc bnc" id="L443" title="All 4 branches missed.">        return mediaPlayer != null &amp;&amp; MediaPlayer.Status.PLAYING.equals(mediaPlayer.getStatus());</span>
+    }
+
+    /**
+     * Pauses selected song.
+     */
+    public static void pause() {
+<span class="nc bnc" id="L450" title="All 2 branches missed.">        if (isPlaying()) {</span>
+<span class="nc" id="L451">            mediaPlayer.pause();</span>
+<span class="nc" id="L452">            timer.cancel();</span>
+<span class="nc" id="L453">            timer = new Timer();</span>
+<span class="nc" id="L454">            mainController.updatePlayPauseIcon(false);</span>
+        }
+<span class="nc" id="L456">    }</span>
+
+    public static void seek(int seconds) {
+<span class="nc bnc" id="L459" title="All 2 branches missed.">        if (mediaPlayer != null) {</span>
+<span class="nc" id="L460">            mediaPlayer.seek(new Duration(seconds * 1000));</span>
+<span class="nc" id="L461">            timerCounter = seconds * 4;</span>
+<span class="nc" id="L462">            mainController.updateTimeLabels();</span>
+        }
+<span class="nc" id="L464">    }</span>
+
+    /**
+     * Skips song.
+     */
+    public static void skip() {
+<span class="nc bnc" id="L470" title="All 2 branches missed.">        if (nowPlayingIndex &lt; nowPlayingList.size() - 1) {</span>
+<span class="nc" id="L471">            boolean isPlaying = isPlaying();</span>
+<span class="nc" id="L472">            mainController.updatePlayPauseIcon(isPlaying);</span>
+<span class="nc" id="L473">            setNowPlaying(nowPlayingList.get(nowPlayingIndex + 1));</span>
+<span class="nc bnc" id="L474" title="All 2 branches missed.">            if (isPlaying) {</span>
+<span class="nc" id="L475">                play();</span>
+            }
+<span class="nc bnc" id="L477" title="All 2 branches missed.">        } else if (isLoopActive) {</span>
+<span class="nc" id="L478">            boolean isPlaying = isPlaying();</span>
+<span class="nc" id="L479">            mainController.updatePlayPauseIcon(isPlaying);</span>
+<span class="nc" id="L480">            nowPlayingIndex = 0;</span>
+<span class="nc" id="L481">            setNowPlaying(nowPlayingList.get(nowPlayingIndex));</span>
+<span class="nc bnc" id="L482" title="All 2 branches missed.">            if (isPlaying) {</span>
+<span class="nc" id="L483">                play();</span>
+            }
+<span class="nc" id="L485">        } else {</span>
+<span class="nc" id="L486">            mainController.updatePlayPauseIcon(false);</span>
+<span class="nc" id="L487">            nowPlayingIndex = 0;</span>
+<span class="nc" id="L488">            setNowPlaying(nowPlayingList.get(nowPlayingIndex));</span>
+        }
+<span class="nc" id="L490">    }</span>
+
+    public static void back() {
+<span class="nc bnc" id="L493" title="All 4 branches missed.">        if (timerCounter &gt; 20 || nowPlayingIndex == 0) {</span>
+<span class="nc" id="L494">            mainController.initializeTimeSlider();</span>
+<span class="nc" id="L495">            seek(0);</span>
+        } else {
+<span class="nc" id="L497">            boolean isPlaying = isPlaying();</span>
+<span class="nc" id="L498">            setNowPlaying(nowPlayingList.get(nowPlayingIndex - 1));</span>
+<span class="nc bnc" id="L499" title="All 2 branches missed.">            if (isPlaying) {</span>
+<span class="nc" id="L500">                play();</span>
+            }
+        }
+<span class="nc" id="L503">    }</span>
+
+    public static void mute(boolean isMuted) {
+<span class="nc bnc" id="L506" title="All 2 branches missed.">        MusicPlayer.isMuted = !isMuted;</span>
+<span class="nc bnc" id="L507" title="All 2 branches missed.">        if (mediaPlayer != null) {</span>
+<span class="nc bnc" id="L508" title="All 2 branches missed.">            mediaPlayer.setMute(!isMuted);</span>
+        }
+<span class="nc" id="L510">    }</span>
+
+    public static void toggleLoop() {
+<span class="nc bnc" id="L513" title="All 2 branches missed.">        isLoopActive = !isLoopActive;</span>
+<span class="nc" id="L514">    }</span>
+
+    public static boolean isLoopActive() {
+<span class="nc" id="L517">        return isLoopActive;</span>
+    }
+
+    public static void toggleShuffle() {
+
+<span class="nc bnc" id="L522" title="All 2 branches missed.">        isShuffleActive = !isShuffleActive;</span>
+
+<span class="nc bnc" id="L524" title="All 2 branches missed.">        if (isShuffleActive) {</span>
+<span class="nc" id="L525">            Collections.shuffle(nowPlayingList);</span>
+        } else {
+<span class="nc" id="L527">            Collections.sort(nowPlayingList, (first, second) -&gt; {</span>
+<span class="nc" id="L528">                int result = Library.getAlbum(first.getAlbum()).compareTo(Library.getAlbum(second.getAlbum()));</span>
+<span class="nc bnc" id="L529" title="All 2 branches missed.">                if (result != 0) {</span>
+<span class="nc" id="L530">                    return result;</span>
+                }
+<span class="nc" id="L532">                result = Library.getAlbum(first.getAlbum()).compareTo(Library.getAlbum(second.getAlbum()));</span>
+<span class="nc bnc" id="L533" title="All 2 branches missed.">                if (result != 0) {</span>
+<span class="nc" id="L534">                    return result;</span>
+                }
+<span class="nc" id="L536">                result = first.compareTo(second);</span>
+<span class="nc" id="L537">                return result;</span>
+            });
+        }
+
+<span class="nc" id="L541">        nowPlayingIndex = nowPlayingList.indexOf(nowPlaying);</span>
+
+<span class="nc bnc" id="L543" title="All 2 branches missed.">        if (mainController.getSubViewController() instanceof NowPlayingController) {</span>
+<span class="nc" id="L544">            mainController.loadView(&quot;nowPlaying&quot;);</span>
+        }
+<span class="nc" id="L546">    }</span>
+
+    public static boolean isShuffleActive() {
+<span class="nc" id="L549">        return isShuffleActive;</span>
+    }
+
+    public static Stage getStage() {
+<span class="nc" id="L553">        return stage;</span>
+    }
+
+    /**
+     * Gets main controller object.
+     * @return MainController
+     */
+    public static MainController getMainController() {
+<span class="nc" id="L561">        return mainController;</span>
+    }
+
+    /**
+     * Gets currently playing song list.
+     * @return arraylist of now playing songs
+     */
+    public static ArrayList&lt;Song&gt; getNowPlayingList() {
+<span class="nc bnc" id="L569" title="All 2 branches missed.">        return nowPlayingList == null ? new ArrayList&lt;&gt;() : new ArrayList&lt;&gt;(nowPlayingList);</span>
+    }
+
+    public static void addSongToNowPlayingList(Song song) {
+<span class="nc bnc" id="L573" title="All 2 branches missed.">        if (!nowPlayingList.contains(song)) {</span>
+<span class="nc" id="L574">            nowPlayingList.add(song);</span>
+<span class="nc" id="L575">            Library.savePlayingList();</span>
+        }
+<span class="nc" id="L577">    }</span>
+
+    public static void setNowPlayingList(List&lt;Song&gt; list) {
+<span class="nc" id="L580">        nowPlayingList = new ArrayList&lt;&gt;(list);</span>
+<span class="nc" id="L581">        Library.savePlayingList();</span>
+<span class="nc" id="L582">    }</span>
+
+    public static void setNowPlaying(Song song) {
+<span class="nc bnc" id="L585" title="All 2 branches missed.">        if (nowPlayingList.contains(song)) {</span>
+
+<span class="nc" id="L587">            updatePlayCount();</span>
+<span class="nc" id="L588">            nowPlayingIndex = nowPlayingList.indexOf(song);</span>
+<span class="nc bnc" id="L589" title="All 2 branches missed.">            if (nowPlaying != null) {</span>
+<span class="nc" id="L590">                nowPlaying.setPlaying(false);</span>
+            }
+<span class="nc" id="L592">            nowPlaying = song;</span>
+<span class="nc" id="L593">            nowPlaying.setPlaying(true);</span>
+<span class="nc bnc" id="L594" title="All 2 branches missed.">            if (mediaPlayer != null) {</span>
+<span class="nc" id="L595">                mediaPlayer.stop();</span>
+            }
+<span class="nc bnc" id="L597" title="All 2 branches missed.">            if (timer != null) {</span>
+<span class="nc" id="L598">                timer.cancel();</span>
+            }
+<span class="nc" id="L600">            timer = new Timer();</span>
+<span class="nc" id="L601">            timerCounter = 0;</span>
+<span class="nc" id="L602">            secondsPlayed = 0;</span>
+<span class="nc" id="L603">            String path = song.getLocation();</span>
+<span class="nc" id="L604">            Media media = new Media(Paths.get(path).toUri().toString());</span>
+<span class="nc" id="L605">            mediaPlayer = new MediaPlayer(media);</span>
+<span class="nc" id="L606">            mediaPlayer.volumeProperty().bind(mainController.getVolumeSlider().valueProperty().divide(200));</span>
+<span class="nc" id="L607">            mediaPlayer.setOnEndOfMedia(new SongSkipper());</span>
+<span class="nc" id="L608">            mediaPlayer.setMute(isMuted);</span>
+<span class="nc" id="L609">            mainController.updateNowPlayingButton();</span>
+<span class="nc" id="L610">            mainController.initializeTimeSlider();</span>
+<span class="nc" id="L611">            mainController.initializeTimeLabels();</span>
+        }
+<span class="nc" id="L613">    }</span>
+
+    private static void updatePlayCount() {
+<span class="nc bnc" id="L616" title="All 2 branches missed.">        if (nowPlaying != null) {</span>
+<span class="nc" id="L617">            int length = (int) nowPlaying.getLengthInSeconds();</span>
+<span class="nc bnc" id="L618" title="All 2 branches missed.">            if ((100 * secondsPlayed / length) &gt; 50) {</span>
+<span class="nc" id="L619">                nowPlaying.played();</span>
+            }
+        }
+<span class="nc" id="L622">    }</span>
+
+    public static Song getNowPlaying() {
+<span class="nc" id="L625">        return nowPlaying;</span>
+    }
+
+    public static String getTimePassed() {
+<span class="nc" id="L629">        int secondsPassed = timerCounter / 4;</span>
+<span class="nc" id="L630">        int minutes = secondsPassed / 60;</span>
+<span class="nc" id="L631">        int seconds = secondsPassed % 60;</span>
+<span class="nc bnc" id="L632" title="All 2 branches missed.">        return Integer.toString(minutes) + &quot;:&quot; + (seconds &lt; 10 ? &quot;0&quot; + seconds : Integer.toString(seconds));</span>
+    }
+
+    public static String getTimeRemaining() {
+<span class="nc" id="L636">        long secondsPassed = timerCounter / 4;</span>
+<span class="nc" id="L637">        long totalSeconds = getNowPlaying().getLengthInSeconds();</span>
+<span class="nc" id="L638">        long secondsRemaining = totalSeconds - secondsPassed;</span>
+<span class="nc" id="L639">        long minutes = secondsRemaining / 60;</span>
+<span class="nc" id="L640">        long seconds = secondsRemaining % 60;</span>
+<span class="nc bnc" id="L641" title="All 2 branches missed.">        return Long.toString(minutes) + &quot;:&quot; + (seconds &lt; 10 ? &quot;0&quot; + seconds : Long.toString(seconds));</span>
+    }
+
+    public static void setDraggedItem(Object item) {
+<span class="nc" id="L645">        draggedItem = item;</span>
+<span class="nc" id="L646">    }</span>
+
+    public static Object getDraggedItem() {
+<span class="nc" id="L649">        return draggedItem;</span>
+    }
+
+    public static int getXMLFileNum() {
+<span class="fc" id="L653">        return xmlFileNum;</span>
+    }
+
+    public static void setXMLFileNum(int i) {
+<span class="fc" id="L657">        xmlFileNum = i;</span>
+<span class="fc" id="L658">    }</span>
+
+    public static int getLastIdAssigned() {
+<span class="nc" id="L661">        return lastIdAssigned;</span>
+    }
+
+    public static void setLastIdAssigned(int i) {
+<span class="fc" id="L665">        lastIdAssigned = i;</span>
+<span class="fc" id="L666">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

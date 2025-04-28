@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<library>
+    <musicLibrary>
+        <fileNum>3</fileNum>          <lastId>3</lastId>            </musicLibrary>
+    <songs>
+        <song>
+            <id>1</id>
+            <title>Example Track One</title>
+            <artist>Artist A</artist>
+            <album>Greatest Hits</album>
+            <length>245</length>          <trackNumber>1</trackNumber>
+            <discNumber>1</discNumber>
+            <playCount>15</playCount>
+            <location>C:\Music\ExampleTrackOne.mp3</location>
+        </song>
+        <song>
+            <id>2</id>
+            <title>Another Song</title>
+            <artist>Artist B</artist>
+            <album>Debut Album</album>
+            <length>180</length>          <trackNumber>5</trackNumber>
+            <discNumber>1</discNumber>
+            <playCount>3</playCount>
+            <playDate>2025-04-27T15:00:00</playDate>
+            <location>C:\Music\AnotherSong.mp3</location>
+        </song>
+        <song>
+            <id>3</id>
+            <title>Third Time Lucky</title>
+            <artist>Artist A</artist>       <album>Single</album>           <length>210</length>
+            <trackNumber>1</trackNumber>     <discNumber>0</discNumber>      <playCount>0</playCount>
+        </song>
+    </songs>
+
+</library>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="util.PlayingTableCellTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2025-04-28T16:23:09" hostname="Sungwons-MacBook-Pro" time="0.029">
+  <properties/>
+  <testcase name="testUpdateItemWithNullValue()" classname="util.PlayingTableCellTest" time="0.001"/>
+  <testcase name="testUpdateItemWithFalseValue()" classname="util.PlayingTableCellTest" time="0.001"/>
+  <testcase name="testUpdateItemWithTrueValue()" classname="util.PlayingTableCellTest" time="0.024"/>
+  <testcase name="testUpdateItemWhenEmpty()" classname="util.PlayingTableCellTest" time="0.0"/>
+  <testcase name="testUpdateItemWithTrueValueThrowException()" classname="util.PlayingTableCellTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

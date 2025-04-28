@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ControlPanelController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">ControlPanelController.java</span></div><h1>ControlPanelController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.model.Library;
+import app.musicplayer.model.Playlist;
+import app.musicplayer.model.Song;
+import app.musicplayer.util.SubView;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.Transition;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.Event;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.ContextMenu;
+import javafx.scene.control.MenuItem;
+import javafx.scene.control.SeparatorMenuItem;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
+import javafx.util.Duration;
+
+<span class="nc" id="L26">public class ControlPanelController implements Initializable {</span>
+
+	@FXML private Pane playButton;
+	@FXML private Pane playlistButton;
+
+	private ContextMenu contextMenu;
+
+<span class="nc" id="L33">	private Animation showMenuAnimation = new Transition() {</span>
+		{
+<span class="nc" id="L35">			setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L36">			setInterpolator(Interpolator.EASE_BOTH);</span>
+<span class="nc" id="L37">		}</span>
+		protected void interpolate(double frac) {
+<span class="nc" id="L39">			contextMenu.setOpacity(frac);</span>
+<span class="nc" id="L40">		}</span>
+	};
+
+	@Override
+<span class="nc" id="L44">	public void initialize(URL location, ResourceBundle resources) {}</span>
+
+	@FXML
+	private void playSong(Event e) {
+<span class="nc" id="L48">		SubView controller = MusicPlayer.getMainController().getSubViewController();</span>
+<span class="nc" id="L49">		controller.play();</span>
+<span class="nc" id="L50">		e.consume();</span>
+<span class="nc" id="L51">	}</span>
+
+	@FXML
+	private void addToPlaylist(Event e) {
+		// Gets the mouse event coordinates in the screen to display the context menu in this location.
+<span class="nc" id="L56">		MouseEvent mouseEvent = (MouseEvent) e;</span>
+<span class="nc" id="L57">		double x = mouseEvent.getScreenX();</span>
+<span class="nc" id="L58">		double y = mouseEvent.getScreenY();</span>
+
+		// Retrieves the selected song to add to the desired playlist.
+<span class="nc" id="L61">		Song selectedSong = MusicPlayer.getMainController().getSubViewController().getSelectedSong();</span>
+
+<span class="nc" id="L63">		ObservableList&lt;Playlist&gt; playlists = Library.getPlaylists();</span>
+
+		// Retrieves all the playlist titles to create menu items.
+<span class="nc" id="L66">		ObservableList&lt;String&gt; playlistTitles = FXCollections.observableArrayList();</span>
+<span class="nc bnc" id="L67" title="All 2 branches missed.">		for (Playlist playlist : playlists) {</span>
+<span class="nc" id="L68">			String title = playlist.getTitle();</span>
+<span class="nc bnc" id="L69" title="All 4 branches missed.">			if (!(title.equals(&quot;Most Played&quot;) || title.equals(&quot;Recently Played&quot;)) &amp;&amp;</span>
+<span class="nc bnc" id="L70" title="All 2 branches missed.">					!playlist.getSongs().contains(selectedSong)) {</span>
+<span class="nc" id="L71">				playlistTitles.add(title);</span>
+			}
+<span class="nc" id="L73">		}</span>
+
+<span class="nc" id="L75">		contextMenu = new ContextMenu();</span>
+
+<span class="nc" id="L77">		MenuItem playing = new MenuItem(&quot;Playing&quot;);</span>
+<span class="nc" id="L78">		playing.setStyle(&quot;-fx-text-fill: black&quot;);</span>
+<span class="nc" id="L79">		playing.setOnAction(e1 -&gt; {</span>
+<span class="nc" id="L80">			MusicPlayer.addSongToNowPlayingList(selectedSong);</span>
+<span class="nc" id="L81">		});</span>
+
+<span class="nc" id="L83">		contextMenu.getItems().add(playing);</span>
+
+<span class="nc bnc" id="L85" title="All 2 branches missed.">		if (playlistTitles.size() &gt; 0) {</span>
+<span class="nc" id="L86">			SeparatorMenuItem item = new SeparatorMenuItem();</span>
+<span class="nc" id="L87">			item.getContent().setStyle(</span>
+					&quot;-fx-border-width: 1 0 0 0; &quot; +
+							&quot;-fx-border-color: #c2c2c2; &quot; +
+							&quot;-fx-border-insets: 5 5 5 5;&quot;);
+<span class="nc" id="L91">			contextMenu.getItems().add(item);</span>
+		}
+
+		// Creates a menu item for each playlist title and adds it to the context menu.
+<span class="nc bnc" id="L95" title="All 2 branches missed.">		for (String title : playlistTitles) {</span>
+<span class="nc" id="L96">			MenuItem item = new MenuItem(title);</span>
+<span class="nc" id="L97">			item.setStyle(&quot;-fx-text-fill: black&quot;);</span>
+
+<span class="nc" id="L99">			item.setOnAction(e2 -&gt; {</span>
+				// Finds the desired playlist and adds the currently selected song to it.
+<span class="nc" id="L101">				String targetPlaylistTitle = item.getText();</span>
+
+				// Finds the correct playlist and adds the song to it.
+<span class="nc" id="L104">				playlists.forEach(playlist -&gt; {</span>
+<span class="nc bnc" id="L105" title="All 2 branches missed.">					if (playlist.getTitle().equals(targetPlaylistTitle)) {</span>
+<span class="nc" id="L106">						playlist.addSong(selectedSong);</span>
+					}
+<span class="nc" id="L108">				});</span>
+<span class="nc" id="L109">			});</span>
+
+<span class="nc" id="L111">			contextMenu.getItems().add(item);</span>
+<span class="nc" id="L112">		}</span>
+
+<span class="nc" id="L114">		contextMenu.setOpacity(0);</span>
+<span class="nc" id="L115">		contextMenu.show(playButton, x, y);</span>
+<span class="nc" id="L116">		showMenuAnimation.play();</span>
+
+<span class="nc" id="L118">		e.consume();</span>
+<span class="nc" id="L119">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

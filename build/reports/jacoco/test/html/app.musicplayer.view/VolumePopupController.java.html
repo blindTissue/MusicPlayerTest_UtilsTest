@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>VolumePopupController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">VolumePopupController.java</span></div><h1>VolumePopupController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import java.net.URL;
+import java.util.ResourceBundle;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.util.CustomSliderSkin;
+import javafx.css.PseudoClass;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
+
+<span class="nc" id="L16">public class VolumePopupController implements Initializable {</span>
+
+	@FXML private Slider volumeSlider;
+	@FXML private Region frontVolumeTrack;
+	@FXML private Label volumeLabel;
+	@FXML private Pane muteButton;
+	@FXML private Pane mutedButton;
+
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		try {
+
+<span class="nc" id="L28">			CustomSliderSkin sliderSkin = new CustomSliderSkin(volumeSlider);</span>
+<span class="nc" id="L29">			volumeSlider.setSkin(sliderSkin);</span>
+<span class="nc" id="L30">			frontVolumeTrack.prefWidthProperty().bind(volumeSlider.widthProperty().subtract(30).multiply(volumeSlider.valueProperty().divide(volumeSlider.maxProperty())));</span>
+<span class="nc" id="L31">			volumeSlider.valueProperty().addListener((x, y, z) -&gt; {</span>
+<span class="nc" id="L32">				volumeLabel.setText(Integer.toString(z.intValue()));</span>
+<span class="nc" id="L33">			});</span>
+<span class="nc" id="L34">			volumeSlider.setOnMousePressed(x -&gt; {</span>
+<span class="nc bnc" id="L35" title="All 2 branches missed.">				if (mutedButton.isVisible()) {</span>
+<span class="nc" id="L36">					muteClick();</span>
+				}
+<span class="nc" id="L38">			});</span>
+
+<span class="nc" id="L40">		} catch (Exception ex) {</span>
+
+<span class="nc" id="L42">			ex.printStackTrace();</span>
+<span class="nc" id="L43">		}</span>
+<span class="nc" id="L44">	}</span>
+
+	Slider getSlider() {
+<span class="nc" id="L47">		return volumeSlider;</span>
+	}
+
+	@FXML private void volumeClick() {
+<span class="nc" id="L51">		MusicPlayer.getMainController().volumeClick();</span>
+<span class="nc" id="L52">	}</span>
+
+	@FXML private void muteClick() {
+
+<span class="nc" id="L56">		PseudoClass muted = PseudoClass.getPseudoClass(&quot;muted&quot;);</span>
+<span class="nc" id="L57">		boolean isMuted = mutedButton.isVisible();</span>
+<span class="nc" id="L58">		muteButton.setVisible(isMuted);</span>
+<span class="nc bnc" id="L59" title="All 2 branches missed.">		mutedButton.setVisible(!isMuted);</span>
+<span class="nc bnc" id="L60" title="All 2 branches missed.">		volumeSlider.pseudoClassStateChanged(muted, !isMuted);</span>
+<span class="nc bnc" id="L61" title="All 2 branches missed.">		frontVolumeTrack.pseudoClassStateChanged(muted, !isMuted);</span>
+<span class="nc bnc" id="L62" title="All 2 branches missed.">		volumeLabel.pseudoClassStateChanged(muted, !isMuted);</span>
+<span class="nc" id="L63">		MusicPlayer.mute(isMuted);</span>
+<span class="nc" id="L64">	}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

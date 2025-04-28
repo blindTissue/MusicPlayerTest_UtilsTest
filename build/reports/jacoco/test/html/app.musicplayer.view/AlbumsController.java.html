@@ -1,0 +1,582 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AlbumsController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.view</a> &gt; <span class="el_source">AlbumsController.java</span></div><h1>AlbumsController.java</h1><pre class="source lang-java linenums">package app.musicplayer.view;
+
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.ResourceBundle;
+
+import app.musicplayer.MusicPlayer;
+import app.musicplayer.model.Album;
+import app.musicplayer.model.Library;
+import app.musicplayer.model.Song;
+import app.musicplayer.util.ClippedTableCell;
+import app.musicplayer.util.ControlPanelTableCell;
+import app.musicplayer.util.PlayingTableCell;
+import app.musicplayer.util.SubView;
+import javafx.animation.Animation;
+import javafx.animation.Interpolator;
+import javafx.animation.Transition;
+import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.event.EventHandler;
+import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.Separator;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TableView.TableViewSelectionModel;
+import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.ImageView;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.input.Dragboard;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.TransferMode;
+import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.VBox;
+import javafx.util.Duration;
+
+<span class="nc" id="L51">public class AlbumsController implements Initializable, SubView {</span>
+	
+    @FXML private ScrollPane gridBox;
+	@FXML private FlowPane grid;
+    @FXML private VBox songBox;
+    @FXML private TableView&lt;Song&gt; songTable;
+    @FXML private TableColumn&lt;Song, Boolean&gt; playingColumn;
+    @FXML private TableColumn&lt;Song, String&gt; titleColumn;
+    @FXML private TableColumn&lt;Song, String&gt; lengthColumn;
+    @FXML private TableColumn&lt;Song, Integer&gt; playsColumn;
+    @FXML private Label artistLabel;
+    @FXML private Label albumLabel;
+    @FXML private Separator horizontalSeparator;
+    @FXML private Separator verticalSeparator;
+    
+<span class="nc" id="L66">    private boolean isAlbumDetailCollapsed = true;</span>
+    
+    // Initializes values used for animations.
+<span class="nc" id="L69">    private double expandedHeight = 400;</span>
+<span class="nc" id="L70">    private double collapsedHeight = 0;</span>
+    
+    // Initializes the index for the currently selected cell.
+    private int currentCell;
+    
+    // Initializes the value of the x-coordinate for the currently selected cell.
+    private double currentCellYCoordinate;
+    
+    private Song selectedSong;
+    
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		
+<span class="nc" id="L83">		songTable.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);</span>
+		
+<span class="nc" id="L85">		ObservableList&lt;Album&gt; albums = Library.getAlbums();</span>
+<span class="nc" id="L86">		Collections.sort(albums);</span>
+
+<span class="nc bnc" id="L88" title="All 2 branches missed.">        int limit = (albums.size() &lt; 25) ? albums.size() : 25;</span>
+
+<span class="nc bnc" id="L90" title="All 2 branches missed.">		for (int i = 0; i &lt; limit; i++) {</span>
+
+<span class="nc" id="L92">            Album album = albums.get(i);</span>
+<span class="nc" id="L93">            grid.getChildren().add(createCell(album, i));</span>
+		}
+
+<span class="nc bnc" id="L96" title="All 2 branches missed.">        int rows = (albums.size() % 5 == 0) ? albums.size() / 5 : albums.size() / 5 + 1;</span>
+        
+        // Sets the height and width of the grid to fill the screen.
+<span class="nc" id="L99">        grid.prefHeightProperty().bind(gridBox.widthProperty().divide(5).add(16).multiply(rows));</span>
+<span class="nc" id="L100">        grid.prefWidthProperty().bind(gridBox.widthProperty());</span>
+        
+		// Sets the song table to be invisible when the view is initialized.
+<span class="nc" id="L103">        songBox.setVisible(false);</span>
+        
+<span class="nc" id="L105">        gridBox.heightProperty().addListener((obs, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L106">        	expandedHeight = newValue.doubleValue() / 2.0;</span>
+<span class="nc bnc" id="L107" title="All 2 branches missed.">        	if (!isAlbumDetailCollapsed) {</span>
+<span class="nc" id="L108">        		songBox.setPrefHeight(expandedHeight);</span>
+        	}
+<span class="nc" id="L110">        });</span>
+
+<span class="nc" id="L112">        new Thread(() -&gt; {</span>
+
+        	try {
+<span class="nc" id="L115">        		Thread.sleep(1000);</span>
+<span class="nc" id="L116">        	} catch (Exception ex) {</span>
+<span class="nc" id="L117">        		ex.printStackTrace();</span>
+<span class="nc" id="L118">        	}</span>
+        	
+<span class="nc bnc" id="L120" title="All 2 branches missed.">            for (int j = 25; j &lt; albums.size(); j++) {</span>
+<span class="nc" id="L121">            	Album album = albums.get(j);</span>
+<span class="nc" id="L122">                int k = j;</span>
+<span class="nc" id="L123">                Platform.runLater(() -&gt; {</span>
+<span class="nc" id="L124">                    grid.getChildren().add(createCell(album, k));</span>
+<span class="nc" id="L125">                });</span>
+            }
+<span class="nc" id="L127">        }).start();</span>
+        
+        // Sets preferred column width.
+<span class="nc" id="L130">        titleColumn.prefWidthProperty().bind(songTable.widthProperty().subtract(50).multiply(0.5));</span>
+<span class="nc" id="L131">        lengthColumn.prefWidthProperty().bind(songTable.widthProperty().subtract(50).multiply(0.25));</span>
+<span class="nc" id="L132">        playsColumn.prefWidthProperty().bind(songTable.widthProperty().subtract(50).multiply(0.25));</span>
+        
+<span class="nc" id="L134">        songTable.addEventFilter(MouseEvent.MOUSE_PRESSED, event -&gt; {</span>
+<span class="nc" id="L135">        	songTable.requestFocus();</span>
+<span class="nc" id="L136">        	event.consume();</span>
+<span class="nc" id="L137">        });</span>
+        
+        // Sets the playing properties for the songs in the song table.
+<span class="nc" id="L140">        songTable.setRowFactory(x -&gt; {</span>
+<span class="nc" id="L141">            TableRow&lt;Song&gt; row = new TableRow&lt;Song&gt;();</span>
+
+<span class="nc" id="L143">            PseudoClass playing = PseudoClass.getPseudoClass(&quot;playing&quot;);</span>
+
+<span class="nc" id="L145">            ChangeListener&lt;Boolean&gt; changeListener = (obs, oldValue, newValue) -&gt; {</span>
+<span class="nc" id="L146">                row.pseudoClassStateChanged(playing, newValue.booleanValue());</span>
+<span class="nc" id="L147">            };</span>
+
+<span class="nc" id="L149">            row.itemProperty().addListener((obs, previousSong, currentSong) -&gt; {</span>
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            	if (previousSong != null) {</span>
+<span class="nc" id="L151">            		previousSong.playingProperty().removeListener(changeListener);</span>
+            	}
+<span class="nc bnc" id="L153" title="All 2 branches missed.">            	if (currentSong != null) {</span>
+<span class="nc" id="L154">                    currentSong.playingProperty().addListener(changeListener);</span>
+<span class="nc" id="L155">                    row.pseudoClassStateChanged(playing, currentSong.getPlaying());</span>
+                } else {
+<span class="nc" id="L157">                    row.pseudoClassStateChanged(playing, false);</span>
+                }
+<span class="nc" id="L159">            });</span>
+
+<span class="nc" id="L161">            row.setOnMouseClicked(event -&gt; {</span>
+<span class="nc" id="L162">            	TableViewSelectionModel&lt;Song&gt; sm = songTable.getSelectionModel();</span>
+<span class="nc bnc" id="L163" title="All 4 branches missed.">                if (event.getClickCount() == 2 &amp;&amp; !row.isEmpty()) {</span>
+<span class="nc" id="L164">                    play();</span>
+<span class="nc bnc" id="L165" title="All 2 branches missed.">                } else if (event.isShiftDown()) {</span>
+<span class="nc" id="L166">                	ArrayList&lt;Integer&gt; indices = new ArrayList&lt;Integer&gt;(sm.getSelectedIndices());</span>
+<span class="nc bnc" id="L167" title="All 2 branches missed.">                	if (indices.size() &lt; 1) {</span>
+<span class="nc bnc" id="L168" title="All 2 branches missed.">                		if (indices.contains(row.getIndex())) {</span>
+<span class="nc" id="L169">                    		sm.clearSelection(row.getIndex());</span>
+                    	} else {
+<span class="nc" id="L171">                    		sm.select(row.getItem());</span>
+                    	}
+                	} else {
+<span class="nc" id="L174">                		sm.clearSelection();</span>
+<span class="nc" id="L175">	                	indices.sort((first, second) -&gt; first.compareTo(second));</span>
+<span class="nc" id="L176">	                	int max = indices.get(indices.size() - 1);</span>
+<span class="nc" id="L177">	                	int min = indices.get(0);</span>
+<span class="nc bnc" id="L178" title="All 2 branches missed.">	                	if (min &lt; row.getIndex()) {</span>
+<span class="nc bnc" id="L179" title="All 2 branches missed.">	                		for (int i = min; i &lt;= row.getIndex(); i++) {</span>
+<span class="nc" id="L180">	                			sm.select(i);</span>
+	                		}
+	                	} else {
+<span class="nc bnc" id="L183" title="All 2 branches missed.">	                		for (int i = row.getIndex(); i &lt;= max; i++) {</span>
+<span class="nc" id="L184">	                			sm.select(i);</span>
+	                		}
+	                	}
+                	}
+                	
+<span class="nc bnc" id="L189" title="All 2 branches missed.">                } else if (event.isControlDown()) {</span>
+<span class="nc bnc" id="L190" title="All 2 branches missed.">                	if (sm.getSelectedIndices().contains(row.getIndex())) {</span>
+<span class="nc" id="L191">                		sm.clearSelection(row.getIndex());</span>
+                	} else {
+<span class="nc" id="L193">                		sm.select(row.getItem());</span>
+                	}
+                } else {
+<span class="nc bnc" id="L196" title="All 2 branches missed.">                	if (sm.getSelectedIndices().size() &gt; 1) {</span>
+<span class="nc" id="L197">                		sm.clearSelection();</span>
+<span class="nc" id="L198">                    	sm.select(row.getItem());</span>
+<span class="nc bnc" id="L199" title="All 2 branches missed.">                	} else if (sm.getSelectedIndices().contains(row.getIndex())) {</span>
+<span class="nc" id="L200">                		sm.clearSelection();</span>
+                	} else {
+<span class="nc" id="L202">                		sm.clearSelection();</span>
+<span class="nc" id="L203">                    	sm.select(row.getItem());</span>
+                	}
+                }
+<span class="nc" id="L206">            });</span>
+            
+<span class="nc" id="L208">            row.setOnDragDetected(event -&gt; {</span>
+<span class="nc" id="L209">            	Dragboard db = row.startDragAndDrop(TransferMode.ANY);</span>
+<span class="nc" id="L210">            	ClipboardContent content = new ClipboardContent();</span>
+<span class="nc bnc" id="L211" title="All 2 branches missed.">            	if (songTable.getSelectionModel().getSelectedIndices().size() &gt; 1) {</span>
+<span class="nc" id="L212">            		content.putString(&quot;List&quot;);</span>
+<span class="nc" id="L213">                    db.setContent(content);</span>
+<span class="nc" id="L214">                	MusicPlayer.setDraggedItem(songTable.getSelectionModel().getSelectedItems());</span>
+            	} else {
+<span class="nc" id="L216">            		content.putString(&quot;Song&quot;);</span>
+<span class="nc" id="L217">                    db.setContent(content);</span>
+<span class="nc" id="L218">                	MusicPlayer.setDraggedItem(row.getItem());</span>
+            	}
+<span class="nc" id="L220">            	ImageView image = new ImageView(row.snapshot(null, null));</span>
+<span class="nc" id="L221">            	Rectangle2D rectangle = new Rectangle2D(0, 0, 250, 50);</span>
+<span class="nc" id="L222">            	image.setViewport(rectangle);</span>
+<span class="nc" id="L223">            	db.setDragView(image.snapshot(null, null), 125, 25);</span>
+<span class="nc" id="L224">                event.consume();</span>
+<span class="nc" id="L225">            });</span>
+<span class="nc" id="L226">            return row ;</span>
+        });
+        
+<span class="nc" id="L229">        songTable.getSelectionModel().selectedItemProperty().addListener((obs, oldSelection, newSelection) -&gt; {</span>
+<span class="nc bnc" id="L230" title="All 2 branches missed.">        	if (oldSelection != null) {</span>
+<span class="nc" id="L231">        		oldSelection.setSelected(false);</span>
+        	}
+<span class="nc bnc" id="L233" title="All 4 branches missed.">        	if (newSelection != null &amp;&amp; songTable.getSelectionModel().getSelectedIndices().size() == 1) {</span>
+<span class="nc" id="L234">        		newSelection.setSelected(true);</span>
+<span class="nc" id="L235">        		selectedSong = newSelection;</span>
+        	}
+<span class="nc" id="L237">        });</span>
+        
+        // Plays selected song when enter key is pressed.
+<span class="nc" id="L240">        songTable.setOnKeyPressed(event -&gt; {</span>
+<span class="nc bnc" id="L241" title="All 2 branches missed.">        	if (event.getCode().equals(KeyCode.ENTER)) {</span>
+<span class="nc" id="L242">        		play();</span>
+        	}
+<span class="nc" id="L244">        });</span>
+
+<span class="nc" id="L246">        horizontalSeparator.setOnMouseDragged(new EventHandler&lt;MouseEvent&gt;() {</span>
+            @Override public void handle(MouseEvent e) {
+            	
+<span class="nc" id="L249">            	expandedHeight = MusicPlayer.getStage().getHeight() - e.getSceneY() - 75;</span>
+            	
+<span class="nc bnc" id="L251" title="All 2 branches missed.">            	if (expandedHeight &gt; gridBox.getHeight() * 0.75) {	</span>
+<span class="nc" id="L252">                	expandedHeight = gridBox.getHeight() * 0.75;</span>
+<span class="nc bnc" id="L253" title="All 2 branches missed.">                } else if (expandedHeight &lt; gridBox.getHeight() * 0.25) {</span>
+<span class="nc" id="L254">                	expandedHeight = gridBox.getHeight() * 0.25;</span>
+                }
+            	
+<span class="nc" id="L257">            	songBox.setPrefHeight(expandedHeight);</span>
+<span class="nc" id="L258">                e.consume();</span>
+<span class="nc" id="L259">            }</span>
+        });
+<span class="nc" id="L261">	}</span>
+	
+    private VBox createCell(Album album, int index) {
+
+<span class="nc" id="L265">        VBox cell = new VBox();</span>
+<span class="nc" id="L266">        Label title = new Label(album.getTitle());</span>
+<span class="nc" id="L267">        ImageView image = new ImageView(album.getArtwork());</span>
+<span class="nc" id="L268">        image.imageProperty().bind(album.artworkProperty());</span>
+<span class="nc" id="L269">        VBox imageBox = new VBox();</span>
+
+<span class="nc" id="L271">        title.setTextOverrun(OverrunStyle.CLIP);</span>
+<span class="nc" id="L272">        title.setWrapText(true);</span>
+<span class="nc" id="L273">        title.setPadding(new Insets(10, 0, 10, 0));</span>
+<span class="nc" id="L274">        title.setAlignment(Pos.TOP_LEFT);</span>
+<span class="nc" id="L275">        title.setPrefHeight(66);</span>
+<span class="nc" id="L276">        title.prefWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+
+<span class="nc" id="L278">        image.fitWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L279">        image.fitHeightProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L280">        image.setPreserveRatio(true);</span>
+<span class="nc" id="L281">        image.setSmooth(true);</span>
+
+<span class="nc" id="L283">        imageBox.prefWidthProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L284">        imageBox.prefHeightProperty().bind(grid.widthProperty().subtract(100).divide(5).subtract(1));</span>
+<span class="nc" id="L285">        imageBox.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L286">        imageBox.getChildren().add(image);</span>
+
+<span class="nc" id="L288">        cell.getChildren().addAll(imageBox, title);</span>
+<span class="nc" id="L289">        cell.setPadding(new Insets(10, 10, 10, 10));</span>
+<span class="nc" id="L290">        cell.getStyleClass().add(&quot;album-cell&quot;);</span>
+<span class="nc" id="L291">        cell.setAlignment(Pos.CENTER);</span>
+<span class="nc" id="L292">        cell.setOnMouseClicked(event -&gt; {</span>
+        	
+<span class="nc" id="L294">        	PseudoClass selected = PseudoClass.getPseudoClass(&quot;selected&quot;);</span>
+        	
+        	// If the album detail is collapsed, expand it and populate song table.
+<span class="nc bnc" id="L297" title="All 2 branches missed.">        	if (isAlbumDetailCollapsed) {</span>
+        		
+<span class="nc" id="L299">        		cell.pseudoClassStateChanged(selected, true);</span>
+        		
+            	// Updates the index of the currently selected cell.
+<span class="nc" id="L302">            	currentCell = index;</span>
+            	
+        		// Shows song table, plays load animation and populates song table with album songs.
+<span class="nc" id="L305">        		expandAlbumDetail();</span>
+<span class="nc" id="L306">        		expandAnimation.play();</span>
+        		
+<span class="nc" id="L308">        		artistLabel.setText(album.getArtist());</span>
+<span class="nc" id="L309">        		albumLabel.setText(album.getTitle());</span>
+<span class="nc" id="L310">        		populateSongTable(cell, album);</span>
+        		
+        		// Else if album detail is expanded and opened album is reselected.
+<span class="nc bnc" id="L313" title="All 4 branches missed.">        	} else if (!isAlbumDetailCollapsed &amp;&amp; index == currentCell) {</span>
+        		
+<span class="nc" id="L315">        		cell.pseudoClassStateChanged(selected, false);</span>
+        		
+        		// Plays the collapse animation to remove the song table.
+<span class="nc" id="L318">        		collapseAnimation.play();</span>
+        		
+        		// Else if album detail is expanded and a different album is selected on the same row.
+<span class="nc bnc" id="L321" title="All 4 branches missed.">        	} else if (!isAlbumDetailCollapsed &amp;&amp; !(index == currentCell)</span>
+<span class="nc bnc" id="L322" title="All 2 branches missed.">        			&amp;&amp; currentCellYCoordinate == cell.getBoundsInParent().getMaxY()) {</span>
+        		
+<span class="nc bnc" id="L324" title="All 2 branches missed.">        		for (Node child : grid.getChildren()) {</span>
+<span class="nc" id="L325">        			child.pseudoClassStateChanged(selected, false);</span>
+<span class="nc" id="L326">        		}</span>
+<span class="nc" id="L327">        		cell.pseudoClassStateChanged(selected, true);</span>
+        		
+            	// Updates the index of the currently selected cell.
+<span class="nc" id="L330">            	currentCell = index;</span>
+            	
+            	// Plays load animation and populates song table with songs of newly selected album.
+<span class="nc" id="L333">            	tableCollapseAnimation.setOnFinished(x -&gt; {</span>
+<span class="nc" id="L334">            		artistLabel.setText(album.getArtist());</span>
+<span class="nc" id="L335">            		albumLabel.setText(album.getTitle());</span>
+<span class="nc" id="L336">            		populateSongTable(cell, album);</span>
+<span class="nc" id="L337">            		expandAlbumDetail();</span>
+<span class="nc" id="L338">            		tableExpandAnimation.play();</span>
+<span class="nc" id="L339">            		tableCollapseAnimation.setOnFinished(y -&gt; collapseAlbumDetail());</span>
+<span class="nc" id="L340">            	});</span>
+            	
+<span class="nc" id="L342">            	tableCollapseAnimation.play();</span>
+        		
+        		// Else if album detail is expanded and a different album is selected on a different row.
+<span class="nc bnc" id="L345" title="All 4 branches missed.">        	} else if (!isAlbumDetailCollapsed &amp;&amp; !(index == currentCell)</span>
+<span class="nc bnc" id="L346" title="All 2 branches missed.">        			&amp;&amp; !(currentCellYCoordinate == cell.getBoundsInParent().getMaxY())) {</span>
+        		
+<span class="nc bnc" id="L348" title="All 2 branches missed.">        		for (Node child : grid.getChildren()) {</span>
+<span class="nc" id="L349">        			child.pseudoClassStateChanged(selected, false);</span>
+<span class="nc" id="L350">        		}</span>
+<span class="nc" id="L351">        		cell.pseudoClassStateChanged(selected, true);</span>
+        		
+            	// Updates the index of the currently selected cell.
+<span class="nc" id="L354">            	currentCell = index;</span>
+            	
+            	// Collapses the song table and then expands it in the appropriate row with songs on new album.
+<span class="nc" id="L357">            	collapseAlbumDetail();</span>
+<span class="nc" id="L358">        		expandAlbumDetail();</span>
+        		// Plays load animation and populates song table with songs of newly selected album.
+<span class="nc" id="L360">        		tableCollapseAnimation.setOnFinished(x -&gt; {</span>
+<span class="nc" id="L361">        			artistLabel.setText(album.getArtist());</span>
+<span class="nc" id="L362">            		albumLabel.setText(album.getTitle());</span>
+<span class="nc" id="L363">            		populateSongTable(cell, album);</span>
+<span class="nc" id="L364">            		expandAlbumDetail();</span>
+<span class="nc" id="L365">            		tableExpandAnimation.play();</span>
+<span class="nc" id="L366">            		tableCollapseAnimation.setOnFinished(y -&gt; collapseAlbumDetail());</span>
+<span class="nc" id="L367">            	});</span>
+            	
+<span class="nc" id="L369">            	tableCollapseAnimation.play();</span>
+        		
+        	} else {
+        		
+<span class="nc bnc" id="L373" title="All 2 branches missed.">        		for (Node child : grid.getChildren()) {</span>
+<span class="nc" id="L374">        			child.pseudoClassStateChanged(selected, false);</span>
+<span class="nc" id="L375">        		}</span>
+        		
+        		// Plays the collapse animation to remove the song table.
+<span class="nc" id="L378">        		collapseAnimation.play();</span>
+        	}
+        	// Sets the cells max x value as the current cell x coordinate.
+<span class="nc" id="L381">        	currentCellYCoordinate = cell.getBoundsInParent().getMaxY();</span>
+<span class="nc" id="L382">        });</span>
+        
+<span class="nc" id="L384">        cell.setOnDragDetected(event -&gt; {</span>
+<span class="nc" id="L385">        	PseudoClass pressed = PseudoClass.getPseudoClass(&quot;pressed&quot;);</span>
+<span class="nc" id="L386">        	cell.pseudoClassStateChanged(pressed, false);</span>
+<span class="nc" id="L387">        	Dragboard db = cell.startDragAndDrop(TransferMode.ANY);</span>
+<span class="nc" id="L388">        	ClipboardContent content = new ClipboardContent();</span>
+<span class="nc" id="L389">            content.putString(&quot;Album&quot;);</span>
+<span class="nc" id="L390">            db.setContent(content);</span>
+<span class="nc" id="L391">        	MusicPlayer.setDraggedItem(album);</span>
+<span class="nc" id="L392">        	db.setDragView(cell.snapshot(null, null), cell.widthProperty().divide(2).get(), cell.heightProperty().divide(2).get());</span>
+<span class="nc" id="L393">            event.consume();</span>
+<span class="nc" id="L394">        });</span>
+        
+<span class="nc" id="L396">        return cell;</span>
+    }
+    
+    private void expandAlbumDetail() {
+<span class="nc" id="L400">    	isAlbumDetailCollapsed = false;</span>
+<span class="nc" id="L401">    	songBox.setVisible(true);</span>
+<span class="nc" id="L402">    }</span>
+    
+    private void collapseAlbumDetail() {
+<span class="nc" id="L405">    	isAlbumDetailCollapsed = true;</span>
+<span class="nc" id="L406">    	songTable.getItems().clear();</span>
+<span class="nc" id="L407">    	songBox.setVisible(false);</span>
+<span class="nc" id="L408">    }</span>
+    
+    private void populateSongTable(VBox cell, Album selectedAlbum) { 	
+    	// Retrieves albums songs and stores them as an observable list.
+<span class="nc" id="L412">    	ObservableList&lt;Song&gt; albumSongs = FXCollections.observableArrayList(selectedAlbum.getSongs());</span>
+    	
+<span class="nc" id="L414">        playingColumn.setCellFactory(x -&gt; new PlayingTableCell&lt;Song, Boolean&gt;());</span>
+<span class="nc" id="L415">        titleColumn.setCellFactory(x -&gt; new ControlPanelTableCell&lt;Song, String&gt;());</span>
+<span class="nc" id="L416">        lengthColumn.setCellFactory(x -&gt; new ClippedTableCell&lt;Song, String&gt;());</span>
+<span class="nc" id="L417">        playsColumn.setCellFactory(x -&gt; new ClippedTableCell&lt;Song, Integer&gt;());</span>
+
+        // Sets each column item.
+<span class="nc" id="L420">        playingColumn.setCellValueFactory(new PropertyValueFactory&lt;Song, Boolean&gt;(&quot;playing&quot;));</span>
+<span class="nc" id="L421">        titleColumn.setCellValueFactory(new PropertyValueFactory&lt;Song, String&gt;(&quot;title&quot;));</span>
+<span class="nc" id="L422">        lengthColumn.setCellValueFactory(new PropertyValueFactory&lt;Song, String&gt;(&quot;length&quot;));</span>
+<span class="nc" id="L423">        playsColumn.setCellValueFactory(new PropertyValueFactory&lt;Song, Integer&gt;(&quot;playCount&quot;));</span>
+        
+        // Adds songs to table.
+<span class="nc" id="L426">        songTable.setItems(albumSongs);</span>
+<span class="nc" id="L427">        double height = (albumSongs.size() + 1) * 50 + 2;</span>
+<span class="nc" id="L428">        Animation songTableLoadAnimation = new Transition() {</span>
+        	{
+<span class="nc" id="L430">        		setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L431">                setInterpolator(Interpolator.EASE_BOTH);</span>
+<span class="nc" id="L432">        	}</span>
+        	
+        	protected void interpolate(double frac) {
+<span class="nc" id="L435">        		songTable.setMinHeight(frac * height);</span>
+<span class="nc" id="L436">                songTable.setPrefHeight(frac * height);</span>
+<span class="nc" id="L437">        	}</span>
+        };
+<span class="nc" id="L439">        songTableLoadAnimation.play();</span>
+<span class="nc" id="L440">    }</span>
+    
+    @Override
+    public void play() {
+    	
+<span class="nc" id="L445">    	Song song = selectedSong;</span>
+<span class="nc" id="L446">        ObservableList&lt;Song&gt; songList = songTable.getItems();</span>
+<span class="nc bnc" id="L447" title="All 2 branches missed.">        if (MusicPlayer.isShuffleActive()) {</span>
+<span class="nc" id="L448">        	Collections.shuffle(songList);</span>
+<span class="nc" id="L449">        	songList.remove(song);</span>
+<span class="nc" id="L450">        	songList.add(0, song);</span>
+        }
+<span class="nc" id="L452">        MusicPlayer.setNowPlayingList(songList);</span>
+<span class="nc" id="L453">        MusicPlayer.setNowPlaying(song);</span>
+<span class="nc" id="L454">        MusicPlayer.play();</span>
+<span class="nc" id="L455">    }</span>
+    
+    @Override
+    public void scroll(char letter) {
+    	
+<span class="nc" id="L460">	    int index = 0;</span>
+<span class="nc" id="L461">    	double cellHeight = 0;</span>
+<span class="nc" id="L462">    	ObservableList&lt;Node&gt; children = grid.getChildren();</span>
+    	
+<span class="nc bnc" id="L464" title="All 2 branches missed.">    	for (int i = 0; i &lt; children.size(); i++) {</span>
+    		
+<span class="nc" id="L466">    		VBox cell = (VBox) children.get(i);</span>
+<span class="nc" id="L467">    		cellHeight = cell.getHeight();</span>
+<span class="nc bnc" id="L468" title="All 2 branches missed.">    		if (cell.getChildren().size() &gt; 1) {</span>
+<span class="nc" id="L469">    			Label label = (Label) cell.getChildren().get(1);</span>
+<span class="nc" id="L470">        		char firstLetter = removeArticle(label.getText()).charAt(0);</span>
+<span class="nc bnc" id="L471" title="All 2 branches missed.">        		if (firstLetter &lt; letter) {</span>
+<span class="nc" id="L472">        			index++;</span>
+        		}	
+    		}
+    	}
+    	
+<span class="nc" id="L477">    	double row = (index / 5) * cellHeight;</span>
+<span class="nc" id="L478">    	double finalVvalue = row / (grid.getHeight() - gridBox.getHeight());</span>
+<span class="nc" id="L479">    	double startVvalue = gridBox.getVvalue();</span>
+    	
+<span class="nc" id="L481">    	Animation scrollAnimation = new Transition() {</span>
+            {
+<span class="nc" id="L483">                setCycleDuration(Duration.millis(500));</span>
+<span class="nc" id="L484">            }</span>
+            protected void interpolate(double frac) {
+<span class="nc" id="L486">                double vValue = startVvalue + ((finalVvalue - startVvalue) * frac);</span>
+<span class="nc" id="L487">                gridBox.setVvalue(vValue);</span>
+<span class="nc" id="L488">            }</span>
+        };
+        
+<span class="nc" id="L491">        scrollAnimation.play();</span>
+<span class="nc" id="L492">    }</span>
+    
+    private String removeArticle(String title) {
+
+<span class="nc" id="L496">        String arr[] = title.split(&quot; &quot;, 2);</span>
+
+<span class="nc bnc" id="L498" title="All 2 branches missed.">        if (arr.length &lt; 2) {</span>
+<span class="nc" id="L499">            return title;</span>
+        } else {
+
+<span class="nc" id="L502">            String firstWord = arr[0];</span>
+<span class="nc" id="L503">            String theRest = arr[1];</span>
+
+<span class="nc bnc" id="L505" title="All 2 branches missed.">            switch (firstWord) {</span>
+                case &quot;A&quot;:
+                case &quot;An&quot;:
+                case &quot;The&quot;:
+<span class="nc" id="L509">                    return theRest;</span>
+                default:
+<span class="nc" id="L511">                    return title;</span>
+            }
+        }
+    }
+    
+    public Song getSelectedSong() {
+<span class="nc" id="L517">    	return selectedSong;</span>
+    }
+    
+    // Animation to display song table when an album is clicked and the song table is collapsed.
+<span class="nc" id="L521">    private Animation expandAnimation = new Transition() {</span>
+        {
+<span class="nc" id="L523">            setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L524">        }</span>
+        protected void interpolate(double frac) {
+<span class="nc" id="L526">        	double curHeight = collapsedHeight + (expandedHeight - collapsedHeight) * (frac);</span>
+<span class="nc" id="L527">            songBox.setPrefHeight(curHeight);</span>
+<span class="nc" id="L528">            songBox.setOpacity(frac);</span>
+<span class="nc" id="L529">        }</span>
+    };
+    
+    // Animation to hide song table when an album is clicked and the song table is expanded.
+<span class="nc" id="L533">    private Animation collapseAnimation = new Transition() {</span>
+        {
+<span class="nc" id="L535">            setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L536">            setOnFinished(x -&gt; collapseAlbumDetail());</span>
+<span class="nc" id="L537">        }</span>
+        protected void interpolate(double frac) {
+<span class="nc" id="L539">        	double curHeight = collapsedHeight + (expandedHeight - collapsedHeight) * (1.0 - frac);</span>
+<span class="nc" id="L540">            songBox.setPrefHeight(curHeight);</span>
+<span class="nc" id="L541">            songBox.setOpacity(1.0 - frac);</span>
+<span class="nc" id="L542">            songTable.setMinHeight(1 - frac);</span>
+<span class="nc" id="L543">            songTable.setPrefHeight(1 - frac);</span>
+<span class="nc" id="L544">        }</span>
+    };
+    
+<span class="nc" id="L547">    private Animation tableCollapseAnimation = new Transition() {</span>
+        {
+<span class="nc" id="L549">            setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L550">            setOnFinished(x -&gt; collapseAlbumDetail());</span>
+<span class="nc" id="L551">        }</span>
+        protected void interpolate(double frac) {
+<span class="nc" id="L553">        	double curLocation = collapsedHeight + (expandedHeight - collapsedHeight) * (frac);</span>
+<span class="nc" id="L554">            artistLabel.setTranslateY(curLocation);</span>
+<span class="nc" id="L555">            albumLabel.setTranslateY(curLocation);</span>
+<span class="nc" id="L556">            verticalSeparator.setTranslateY(curLocation);</span>
+<span class="nc" id="L557">        	songTable.setTranslateY(curLocation);</span>
+<span class="nc" id="L558">        	artistLabel.setOpacity(1.0 - frac);</span>
+<span class="nc" id="L559">            albumLabel.setOpacity(1.0 - frac);</span>
+<span class="nc" id="L560">            verticalSeparator.setOpacity(1.0 - frac);</span>
+<span class="nc" id="L561">        	songTable.setOpacity(1.0 - frac);</span>
+<span class="nc" id="L562">        }</span>
+    };
+
+<span class="nc" id="L565">    private Animation tableExpandAnimation = new Transition() {</span>
+        {
+<span class="nc" id="L567">            setCycleDuration(Duration.millis(250));</span>
+<span class="nc" id="L568">        }</span>
+        protected void interpolate(double frac) {
+<span class="nc" id="L570">        	double curLocation = collapsedHeight + (expandedHeight - collapsedHeight) * (1.0 - frac);</span>
+<span class="nc" id="L571">        	artistLabel.setTranslateY(curLocation);</span>
+<span class="nc" id="L572">            albumLabel.setTranslateY(curLocation);</span>
+<span class="nc" id="L573">            verticalSeparator.setTranslateY(curLocation);</span>
+<span class="nc" id="L574">            songTable.setTranslateY(curLocation);</span>
+<span class="nc" id="L575">            artistLabel.setOpacity(frac);</span>
+<span class="nc" id="L576">            albumLabel.setOpacity(frac);</span>
+<span class="nc" id="L577">            verticalSeparator.setOpacity(frac);</span>
+<span class="nc" id="L578">        	songTable.setOpacity(frac);</span>
+<span class="nc" id="L579">        }</span>
+    };
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

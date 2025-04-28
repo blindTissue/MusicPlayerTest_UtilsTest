@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>Artist.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">MusicPlayerTest</a> &gt; <a href="index.source.html" class="el_package">app.musicplayer.model</a> &gt; <span class="el_source">Artist.java</span></div><h1>Artist.java</h1><pre class="source lang-java linenums">package app.musicplayer.model;
+
+import java.awt.Color;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+
+import javax.imageio.ImageIO;
+import javax.xml.stream.XMLInputFactory;
+import javax.xml.stream.XMLStreamReader;
+
+import app.musicplayer.util.Resources;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.image.Image;
+
+/**
+ * Model class for an Artist
+ *
+ */
+public final class Artist implements Comparable&lt;Artist&gt; {
+
+    private String title;
+    private ArrayList&lt;Album&gt; albums;
+    private Image artistImage;
+    private SimpleObjectProperty&lt;Image&gt; artistImageProperty;
+
+    /**
+     * Constructor for the Artist class.
+     * Creates an artist object and obtains the artist artwork.
+     *
+     * @param title Artist name
+     * @param albums List of artist albums
+     */
+<span class="fc" id="L37">    public Artist(String title, ArrayList&lt;Album&gt; albums) {</span>
+<span class="fc" id="L38">        this.title = title;</span>
+<span class="fc" id="L39">        this.albums = albums;</span>
+<span class="fc" id="L40">        this.artistImageProperty = new SimpleObjectProperty&lt;&gt;(getArtistImage());</span>
+<span class="fc" id="L41">    }</span>
+
+    /**
+     * Gets the artist title.
+     * @return artist title
+     */
+    public String getTitle() {
+<span class="fc" id="L48">        return this.title;</span>
+    }
+
+    /**
+     * Gets array list of artist albums
+     * @return artist albums
+     */
+    public ArrayList&lt;Album&gt; getAlbums() {
+<span class="nc" id="L56">        return new ArrayList&lt;&gt;(this.albums);</span>
+    }
+
+    public ObjectProperty&lt;Image&gt; artistImageProperty() {
+<span class="nc" id="L60">        return this.artistImageProperty;</span>
+    }
+
+    /**
+     * Gets images for artists
+     * @return artist image
+     */
+    public Image getArtistImage() {
+<span class="pc bpc" id="L68" title="1 of 2 branches missed.">        if (artistImage == null) {</span>
+            try {
+<span class="fc" id="L70">                File file = new File(Resources.JAR + &quot;/img/&quot; + this.title + &quot;.jpg&quot;);</span>
+<span class="fc" id="L71">                artistImage = new Image(file.toURI().toURL().toString());</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                if (artistImage.isError()) {</span>
+<span class="fc" id="L73">                    file.delete();</span>
+<span class="fc" id="L74">                    artistImage = new Image(Resources.IMG + &quot;artistsIcon.png&quot;);</span>
+                }
+<span class="nc" id="L76">            } catch (Exception ex) {</span>
+<span class="nc" id="L77">                File file = new File(Resources.JAR + &quot;/img/&quot; + this.title + &quot;.jpg&quot;);</span>
+<span class="nc" id="L78">                file.delete();</span>
+<span class="nc" id="L79">                artistImage = new Image(Resources.IMG + &quot;artistsIcon.png&quot;);</span>
+<span class="fc" id="L80">            }</span>
+        }
+
+<span class="fc" id="L83">        return artistImage;</span>
+    }
+
+    public void downloadArtistImage() {
+        try {
+<span class="nc" id="L88">            File file = new File(Resources.JAR + &quot;/img/&quot; + this.title + &quot;.jpg&quot;);</span>
+<span class="nc" id="L89">            file.mkdirs();</span>
+<span class="nc" id="L90">            XMLInputFactory factory = XMLInputFactory.newInstance();</span>
+<span class="nc" id="L91">            URL xmlData = new URL(Resources.APIBASE</span>
+                    + &quot;method=artist.getinfo&quot;
+<span class="nc" id="L93">                    + &quot;&amp;artist=&quot; + URLEncoder.encode(this.title, &quot;UTF-8&quot;)</span>
+                    + &quot;&amp;api_key=&quot; + Resources.APIKEY);
+<span class="nc" id="L95">            XMLStreamReader reader = factory.createXMLStreamReader(xmlData.openStream(), &quot;UTF-8&quot;);</span>
+<span class="nc" id="L96">            boolean imageFound = false;</span>
+
+<span class="nc bnc" id="L98" title="All 4 branches missed.">            while (reader.hasNext() &amp;&amp; !imageFound) {</span>
+<span class="nc" id="L99">                reader.next();</span>
+
+<span class="nc bnc" id="L101" title="All 2 branches missed.">                if (reader.isStartElement()</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">                        &amp;&amp; reader.getName().getLocalPart().equals(&quot;image&quot;)</span>
+<span class="nc bnc" id="L103" title="All 2 branches missed.">                        &amp;&amp; reader.getAttributeValue(0).equals(&quot;extralarge&quot;)) {</span>
+
+<span class="nc" id="L105">                    reader.next();</span>
+
+<span class="nc bnc" id="L107" title="All 2 branches missed.">                    if (reader.hasText()) {</span>
+<span class="nc" id="L108">                        BufferedImage bufferedImage = ImageIO.read(new URL(reader.getText()));</span>
+<span class="nc" id="L109">                        BufferedImage newBufferedImage = new BufferedImage(bufferedImage.getWidth(),</span>
+<span class="nc" id="L110">                                bufferedImage.getHeight(), BufferedImage.TYPE_INT_RGB);</span>
+<span class="nc" id="L111">                        newBufferedImage.createGraphics().drawImage(bufferedImage, 0, 0, Color.WHITE, null);</span>
+<span class="nc" id="L112">                        ImageIO.write(newBufferedImage, &quot;jpg&quot;, file);</span>
+<span class="nc" id="L113">                        imageFound = true;</span>
+<span class="nc" id="L114">                    }</span>
+                }
+            }
+
+<span class="nc" id="L118">            artistImage = new Image(file.toURI().toURL().toString());</span>
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (artistImage.isError()) {</span>
+<span class="nc" id="L120">                file.delete();</span>
+<span class="nc" id="L121">                artistImage = new Image(Resources.IMG + &quot;artistsIcon.png&quot;);</span>
+            }
+<span class="nc" id="L123">            this.artistImageProperty.setValue(artistImage);</span>
+
+<span class="nc" id="L125">        } catch (Exception ex) {</span>
+<span class="nc" id="L126">            File file = new File(Resources.JAR + &quot;/img/&quot; + this.title + &quot;.jpg&quot;);</span>
+<span class="nc" id="L127">            file.delete();</span>
+<span class="nc" id="L128">        }</span>
+<span class="nc" id="L129">    }</span>
+
+    @Override
+    public int compareTo(Artist other) {
+<span class="nc" id="L133">        String first = removeArticle(this.title);</span>
+<span class="nc" id="L134">        String second = removeArticle(other.title);</span>
+
+<span class="nc" id="L136">        return first.compareTo(second);</span>
+    }
+
+    private String removeArticle(String title) {
+
+<span class="nc" id="L141">        String arr[] = title.split(&quot; &quot;, 2);</span>
+
+<span class="nc bnc" id="L143" title="All 2 branches missed.">        if (arr.length &lt; 2) {</span>
+<span class="nc" id="L144">            return title;</span>
+        } else {
+
+<span class="nc" id="L147">            String firstWord = arr[0];</span>
+<span class="nc" id="L148">            String theRest = arr[1];</span>
+
+<span class="nc bnc" id="L150" title="All 2 branches missed.">            switch (firstWord) {</span>
+                case &quot;A&quot;:
+                case &quot;An&quot;:
+                case &quot;The&quot;:
+<span class="nc" id="L154">                    return theRest;</span>
+                default:
+<span class="nc" id="L156">                    return title;</span>
+            }
+        }
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.11.202310140853</span></div></body></html>

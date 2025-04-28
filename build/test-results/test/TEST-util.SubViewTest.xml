@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="util.SubViewTest" tests="3" skipped="0" failures="0" errors="0" timestamp="2025-04-28T16:23:11" hostname="Sungwons-MacBook-Pro" time="0.004">
+  <properties/>
+  <testcase name="testPlay()" classname="util.SubViewTest" time="0.001"/>
+  <testcase name="testGetSelectedSong()" classname="util.SubViewTest" time="0.001"/>
+  <testcase name="testScroll()" classname="util.SubViewTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>
