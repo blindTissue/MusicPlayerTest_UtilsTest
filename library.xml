@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<library>
+    <musicLibrary>
+        <fileNum>3</fileNum>          <lastId>8</lastId>            </musicLibrary>
+    <songs>
+        
+        
+        <song>
+            <id>3</id>
+            <title>Third Time Lucky</title>
+            <artist>Artist A</artist>       <album>Single</album>           <length>210</length>
+            <trackNumber>1</trackNumber>     <discNumber>0</discNumber>      <playCount>0</playCount>
+        </song>
+    </songs>
+
+</library>
