@@ -1,29 +1,19 @@
-# software_testing_project
-Software Testing Final Project
+# MusicPlayer Test for Util
 
-### Current Ideas
+This is a test for the util class for the musicplayer project. A seperate codebase was made since some source code was modified with hard path to make code work.
+The test is a simple test to check if the util class works as expected.
 
-- https://github.com/logisim-evolution/logisim-evolution
+### Running code
+After cloning the repo, with jdk 1.8 full, (normal jdk doesn't include javafx) run the following command in the root directory of the project:
+```
+./gradlew test --tests "util.*" jacocoTestReport
+```
 
-- https://github.com/traccar/traccar
+This should create a test report in the `build/reports/tests/test/index.html` file.
 
-- https://github.com/JodaOrg/joda-time
-  - There is already a test suite in this repo :(
+Screenshot of the test report was also added to coco_report for your convenience.
+### Notes
 
-- https://github.com/FreeCol/freecol/tree/9b0f4dad3513ab2dc103b89c2843e8dbb46b826b
-  - Seems really ambitious
-- https://github.com/magarena/magarena
-  - A single-player fantasy card game
-- https://github.com/miner-Wh/animal_janggi/tree/master?tab=readme-ov-file
-  - Simple version of Xiangyi
-- https://github.com/huggingface/transformers/blob/main/src/transformers/models/llama/modeling_llama.py
-  - If we don't have a clear goal, we can test huggingface library on some LLM models
-- https://github.com/xingniu/nlp-util?utm_
-  - another utils class that we can check.
-
-
-### Project Proposal
-
-current Proposal can be found 
-
-https://docs.google.com/document/d/1WOVPPopJICJsQNrfoMGSU0zf6E2tf5Wzn5GQ22Lsz2A/edit?usp=sharing 
+There are tests that check multiple threads. There are tests with set time to make sure that threads collide. The time would need some modification in different hardware.
+ControlPanelTableCell was not tested as it should be tested in the view project. The test is not included in this project.
+Please check the slideshow for more information about the test.
